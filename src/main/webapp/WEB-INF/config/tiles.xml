@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+<tiles-definitions>
+	<definition name="simple"
+		template="/WEB-INF/views/template/simple_template.jsp">
+		<put-attribute name="header"
+			value="/WEB-INF/views/template/common_header.jsp" />
+		<put-attribute name="top_nav"
+			value="/WEB-INF/views/template/common_top_nav.jsp" />
+		<put-attribute name="content" value="/WEB-INF/views/home.jsp" />
+		<put-attribute name="footer"
+			value="/WEB-INF/views/template/common_footer.jsp" />
+		<!-- <put-attribute name="footer" value="/WEB-INF/view/template/footer.jsp"/> -->
+	</definition>
+	<definition name="home" extends="simple">
+		<put-attribute name="content" value="/WEB-INF/views/home.jsp" />
+	</definition>
+	
+	
+	<definition name="common"
+		template="/WEB-INF/views/template/common_template.jsp">
+		<put-attribute name="header"
+			value="/WEB-INF/views/template/common_header.jsp" />
+		<put-attribute name="top_nav"
+			value="/WEB-INF/views/template/common_top_nav.jsp" />
+		<put-attribute name="content" value="/WEB-INF/views/home.jsp" />
+		<put-attribute name="footer"
+			value="/WEB-INF/views/template/common_footer.jsp" />
+		<!-- <put-attribute name="footer" value="/WEB-INF/view/template/footer.jsp"/> -->
+	</definition>
+	<definition name="*" extends="common">
+		<put-attribute name="side_nav"
+			value="/WEB-INF/views/{1}/{1}_side_nav.jsp" />
+		<put-attribute name="content" value="/WEB-INF/views/{1}/{1}.jsp" />
+	</definition>
+	<definition name="*/*" extends="common">
+		<put-attribute name="side_nav"
+			value="/WEB-INF/views/{1}/{1}_side_nav.jsp" />
+		<put-attribute name="content" value="/WEB-INF/views/{1}/{2}.jsp" />
+	</definition>
+	<definition name="*/*/*" extends="common">
+		<put-attribute name="side_nav"
+			value="/WEB-INF/views/template/common_side_nav.jsp" />
+		<put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}.jsp" />
+	</definition>
+
+
+
+</tiles-definitions>
