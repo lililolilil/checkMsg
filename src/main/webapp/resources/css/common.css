@@ -22,6 +22,16 @@
 	width: 7%;
 }
 
+.myContainer {
+	background-color: white;
+	clear: both;
+	min-height: 3em;
+	border-radius: 1em;
+	padding: 1em 4em;
+	margin: 0 1em 1em 1em;
+	width: 95%;
+}
+
 .patternBox {
 	background-color: #FAFAD2;
 	border-radius: 0.5em;

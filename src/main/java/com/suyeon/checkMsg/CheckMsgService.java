@@ -243,17 +243,17 @@ public class CheckMsgService {
 	public ArrayList<String> getFilePath(String filepath,String fileExtension) {
 		ArrayList<String> filePathList = new ArrayList<>(); 
 		System.out.println(filepath+"/"+filePathList.toString() +" /"+ fileExtension);
-		filePathList = listFilesForFolder(new File(filepath), filePathList, fileExtension); //jsp 파일탐색
+		filePathList = FilesListinFolder(new File(filepath), filePathList, fileExtension); //jsp 파일탐색
 		System.out.println("[결과]"+filePathList.size()+"개의 파일이 검색되었습니다. ");
 		System.out.println("　└─검색된 파일의 경로를 반환합니다.");
 		return filePathList;
 	}
 	
-	private ArrayList<String> listFilesForFolder(final File folder, ArrayList<String> filePathList, String fileExtension){		
+	public ArrayList<String> FilesListinFolder(final File folder, ArrayList<String> filePathList, String fileExtension){		
 		for(final File fileEntry : folder.listFiles()){
 			if(fileEntry.isDirectory()){
 				//System.out.println("----------------dir"+fileEntry.getName());
-				listFilesForFolder(fileEntry, filePathList, fileExtension);
+				FilesListinFolder(fileEntry, filePathList, fileExtension);
 			}else{
 				if(fileEntry.isFile()&&fileEntry.getName().contains(fileExtension)){
 					//System.out.println(fileEntry.getName()+"/    "+fileEntry.getPath());
@@ -263,6 +263,42 @@ public class CheckMsgService {
 			//end for
 		}
 		return filePathList;
+	}//end listFilesForFolder 
+	public Map<String, String> getFilePathtoMap(String filepath) throws FileNotFoundException {
+		return getFilePathtoMap(filepath,"");
+	}
+	public Map<String, String> getFilePathtoMap(String filepath, String fileExtension) throws FileNotFoundException {
+	/*	File dir = new File(filepath); 
+		if(!dir.exists() || !dir.isDirectory()) { 
+	         new 
+	    } 
+		*/
+		Map<String,String> filePathMap = new HashMap<>();
+		System.out.println(filepath+"/"+fileExtension);
+		if(new File(filepath).exists()){
+			filePathMap = FilesListinFoldertoMap(new File(filepath), filePathMap, fileExtension); //jsp 파일탐색
+			System.out.println("[결과]"+filePathMap.size()+"개의 파일이 검색되었습니다. ");
+			System.out.println("　└─검색된 파일의 경로를 반환합니다.");
+			return filePathMap;
+		}else{
+			throw new FileNotFoundException(); 
+		}
+		
+	}
+	private Map<String,String> FilesListinFoldertoMap(final File folder, Map<String,String> filePathMap, String fileExtension){		
+		for(final File fileEntry : folder.listFiles()){
+			if(fileEntry.isDirectory()){
+				//System.out.println("----------------dir"+fileEntry.getName());
+				FilesListinFoldertoMap(fileEntry, filePathMap, fileExtension);
+			}else{
+				if(fileEntry.isFile()&&fileEntry.getName().contains(fileExtension)){
+					//System.out.println(fileEntry.getName()+"/    "+fileEntry.getPath());
+					filePathMap.put(fileEntry.getName(), fileEntry.getPath()); 
+				}
+			}
+			//end for
+		}
+		return (Map<String, String>) filePathMap;
 	}//end listFilesForFolder 
 	/**
 	 * messagefilepath를 파라미터로 받아서 파일을 로드해서 한줄씩 읽으면서 code와 value를 hashmap에 저장해서 리턴함.
@@ -472,29 +508,50 @@ public class CheckMsgService {
 	 * @param messagefilepath
 	 * @return
 	 */
-	public String createfile(Map<String,String> updateMsg, List<String>deleteMsg, String messagefilepath){
+	public String createfile(Map<String,String> updateMsg, ArrayList<String> deleteMsg, String folderPath, String fileName){
+		logger.info("createFile");
 		BufferedReader br = null;
 		InputStreamReader isr = null; 
 		FileInputStream fis = null; 
 		File file = null; 
-		File updatefile = null; 
+		File backupFile = null; 
+		File newFile = null; 
 		BufferedWriter bw = null; 
 		FileWriter fw = null; 
 		String temp = null; 
-		String newfilePath = messagefilepath.replaceAll("\\.properties","") + "_new.properties"; 
 
 		try{
-			file = new File(messagefilepath); 
-			updatefile = new File(newfilePath); 
+			file = new File(folderPath+"/"+fileName+".properties"); 
+			logger.info("수정할 파일: " +  file.getPath());
+			File dir = new File(folderPath+"/bak");
 			// 있으면 삭제 
-			if (updatefile.exists()){
-				updatefile.delete(); 
-				updatefile = new File(newfilePath); 
-			}
-			fis = new FileInputStream(file);
+			
+			//bakupfolder가 있는지 확인 
+			if(!dir.exists() || !dir.isDirectory()) { 
+				dir.mkdirs(); 
+		    } 
+			 String backupFileName =  fileName; 
+			do{
+				backupFileName = "bak_" +backupFileName; 
+				backupFile = new File(dir, backupFileName+".properties"); 
+			}while(backupFile.exists()); 
+			
+			logger.info("lastpath "+ backupFile.getPath());
+			boolean isMoved = file.renameTo(backupFile); 
+			System.out.println(isMoved);
+			logger.info(file.getName()+ "을" + backupFile.getName()+" 파일로 백업함."); 
+			if(isMoved){
+				file.delete(); 
+				logger.info(file.getName() + "을(를) 삭제함.");
+			}; 
+			
+			newFile = new File(folderPath, fileName+".properties"); 
+			logger.info("새로운 메시지 파일 작성 시작" + newFile.getPath());
+			fis = new FileInputStream(backupFile);
 			isr = new InputStreamReader(fis,"UTF-8"); 
 			br = new BufferedReader(isr); 
-			bw = new BufferedWriter(new FileWriter(updatefile, true)); 
+			bw = new BufferedWriter(new FileWriter(newFile, true)); 
+			
 			//한줄한줄 찾아보자 
 			while((temp=br.readLine())!=null){
 				temp = temp.trim();
@@ -509,15 +566,15 @@ public class CheckMsgService {
 					String[] array= temp.split("=");
 					String code=array[0].trim();
 					String value=""; 
-					
 					if(updateMsg.containsKey(code)){
 						value = unicodeConvert((String)updateMsg.get(code)); 
 						temp = code + "=" + value; 
-						System.out.println("[edit]!!" + temp);
+						logger.info("[eidt]" + temp);
 						bw.write(temp);
 						bw.newLine();
 					}else if(deleteMsg.contains(code)){
-						System.out.println("[delete]!!" + temp);
+						logger.info("[delete]"+ code);
+
 					}else{
 						//update나 삭제 되지 않은 애들..
 						bw.write(temp);
@@ -554,8 +611,10 @@ public class CheckMsgService {
 			}
 
 		}
-		return newfilePath;
+		String infoText = newFile.getName()+"을 생성하였습니다."; 
+		return infoText;
 	}
+
 	
 	
 }

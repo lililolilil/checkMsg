@@ -29,9 +29,9 @@ var init = function(){
 	$("#javafileDir").val($.cookie("javafileDir"));
 	$("#viewfileDir").val($.cookie("viewfileDir"));
 	if($.cookie("messagefileDir")){
-		$("#standardMsgfileDir").val($.cookie("messagefileDir"));
+		$("#messagefileDir").val($.cookie("messagefileDir"));
 	}else if($.cookie("standardMsgfileDir")){
-		$("#standardMsgfileDir").val($.cookie("standardMsgfileDir"));
+		$("#messagefileDir").val($.cookie("standardMsgfileDir"));
 	}
 	$(".resultContainer").hide(); 
 }
@@ -40,6 +40,10 @@ var addEvent = function(){
 	$(document).on("click", ".deletePT", function(e){
 		$(this).parent().remove(); 
 	}); 
+	
+	$(".choosefile").on("click", function(e) {
+	    getMessageFile();
+	});
 	
 	$(".addBtn").on("click", function(e){
 	    // 새로운 정규식 추가 
@@ -56,7 +60,7 @@ var addEvent = function(){
 		$.cookie("u_baseDir", $("#u_baseDir").val()); 		
 		$.cookie("javafileDir", $("#javafileDir").val()); 		
 		$.cookie("viewfileDir", $("#viewfileDir").val()); 		
-		$.cookie("standardMsgfileDir", $("#standardMsgfileDir").val()); 		
+		$.cookie("standardMsgfileDir", $("#messagefileDir").val()); 		
 		
 		var url = "${pageContext.request.contextPath}/checkMsg/usingMessage"; 
 		var javaPatternsList = [], viewPatternsList = [];
@@ -68,13 +72,14 @@ var addEvent = function(){
 		for(i = 0; i<viewPatternsArray.length; i++){
 		    viewPatternsList.push(viewPatternsArray[i].innerText); 
 		}
+		var standardfile = $(".msgfile:checked").val();
 		var form_data = {
 			baseDir: $("#u_baseDir").val(),
 			javafileDir: $("#javafileDir").val(),
 			javaPatterns: javaPatternsList, 
 			viewPatterns: viewPatternsList, 
 			viewfileDir: $("#viewfileDir").val(),
-			standardMsgfileDir: $("#standardMsgfileDir").val()
+			standardMsgfileDir: standardfile
 		}
 		util.progressBar("start");
 		var request = $.ajax({
@@ -84,22 +89,67 @@ var addEvent = function(){
 		    //messagefileDir = C:/Users/suyeon/git/mcare-catholic-daegu/WebContent/WEB-INF/messages
 		    data:JSON.stringify(form_data),
 		    error: function(xhr, status, error){
-			alert(error); 
+			alert(error);
 		    },
 		    success: function(data){
-				if(data.err != null|| data.err !== "" ||data.err != undefined){
-					displayUsingResult(data); 
-				}else{
+			debugger;
+				if(data.err != null ||data.err != undefined){
 				    alert(data.err); 
+				}else{
+				    displayUsingResult(data); 
 				}
 		    }
+		    
 		});
-		
-		request.done(function(){
-			util.progressBar("stop"); 
-		})  
+		util.progressBar("stop"); 
 	});
 }//addEvent
+var getMessageFile = function() {
+	util.progressBar("start");
+	$.cookie("baseDir", $("#u_baseDir").val().replace(/\\/gi, "/"));
+	$.cookie("messagefileDir", $("#messagefileDir").val().replace(/\\/gi, "/"));
+	var url = "${pageContext.request.contextPath}/checkMsg/getFilelist";
+	var form_data = {
+	    baseDir : $.cookie("baseDir"),
+	    messagefileDir : $.cookie("messagefileDir")
+	}
+	$.ajax({
+	    method : "POST",
+	    url : url,
+	    contentType : "application/json",
+	    //messagefileDir = C:/Users/suyeon/git/mcare-catholic-daegu/WebContent/WEB-INF/messages
+	    data : JSON.stringify(form_data),
+	    error : function(xhr, status, error) {
+		alert(error);
+		util.progressBar("stop");
+	    },
+	    success : function(data) {
+		if (data.err != null || data.err !== "" || data.err != undefined) {
+		    displayRadio(data);
+		} else {
+		    alert(data.err);
+		}
+	    }
+
+	});
+	util.progressBar("stop");
+}
+var displayRadio = function(data) {
+	var checkboxArea = $(".checkboxArea").html("");
+	var radio = $("<input type='radio'>"), label = $("<label></label>");
+	div = $("<div></div>").addClass("checkbox checkbox-primary clearfix");
+	messagefile = data.messagefile;
+
+	$.each(messagefile, function(key, value) {
+	    var messageitem = div.clone().html(label.clone().attr("for", key.split(".")[0]).text(key)).prepend(radio.clone().attr({
+		"id" : key.split(".")[0],
+		"class" : "msgfile styled",
+		"name" : key.split(".")[0],
+		"value" : value
+	    }));
+	    checkboxArea.append(messageitem).show();
+	});
+}
 
 var displayUsingResult =  function(data){
     $("#using_result").html("result~!!!!"); 
@@ -199,13 +249,29 @@ var displayUsingResult =  function(data){
 				<button type="button" class="col-sm-1 btn btn-default addBtn" data-addvalue>+</button>
 			</div>
 
-			<div class="form-group">
-				<label for="standardMsgfileDir">standardMsgfileDir:</label> <input
-					type="text" class="form-control" id="standardMsgfileDir"
-					name="standardMsgfileDir"
-					placeholder="비교 메시지리 파일 경로를 입력해 주세요. ex)/WebContent/WEB-INF/messages/message.properties"
-					required="required">
+			<div class="form-group row clearfix">
+				<label for="messagefileDir" class="col-sm-12 control-label">messagefileFolder:</label>
+				<div class="col-sm-9">
+					<input type="text" class="form-control " id="messagefileDir"
+						name="messagefileDir"
+						placeholder="메시지리소스 디렉터리를 입력해 주세요. ex)/WebContent/WEB-INF/messages"
+						required="required">
+				</div>
+				<div class="col-sm-3">
+					<button type="button" class="btn btn-default btn-block choosefile">
+						choose file</button>
+				</div>
+
 			</div>
+			<div class="checkboxContainer">
+				<div class="col-sm-12">
+					<label class="control-label"> 기준이 되는 메시지 파일을 하나만 선택해 주세요:</label>
+				</div>
+				<div class="myContainer checkboxArea clearfix col-sm-12">
+					<br/> <p class="text-center">반드시 파일을 선택 한 후 조회 하세요.</p>
+				</div>
+			</div>
+			
 			<button type="reset" class="btn btn-warning">Clear form</button>
 			<button type="submit" class="btn btn-success submitBtn">Submit</button>
 		</form>
