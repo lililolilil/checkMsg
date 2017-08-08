@@ -329,7 +329,7 @@ public class CheckMsgService {
 					String value=""; 
 
 					if(array.length==1){
-						value="value is none! you must edit here"; 
+						value=""; 
 						System.out.println("[warning]!! 메시지 코드에 대한 값이 없습니다.: " + code);
 
 					}else{
@@ -509,7 +509,7 @@ public class CheckMsgService {
 	 * @return
 	 */
 	public String createfile(Map<String,String> updateMsg, ArrayList<String> deleteMsg, String folderPath, String fileName){
-		logger.info("createFile");
+		logger.info("---------------------------------------------------------------- createFile ----------------------------------");
 		BufferedReader br = null;
 		InputStreamReader isr = null; 
 		FileInputStream fis = null; 
@@ -522,7 +522,7 @@ public class CheckMsgService {
 
 		try{
 			file = new File(folderPath+"/"+fileName+".properties"); 
-			logger.info("수정할 파일: " +  file.getPath());
+			System.out.println("수정할 파일: " +  file.getPath());
 			File dir = new File(folderPath+"/bak");
 			// 있으면 삭제 
 			
@@ -536,17 +536,16 @@ public class CheckMsgService {
 				backupFile = new File(dir, backupFileName+".properties"); 
 			}while(backupFile.exists()); 
 			
-			logger.info("lastpath "+ backupFile.getPath());
+			System.out.print(">>>> 백업된 파일 경로  :  "+ backupFile.getPath());
 			boolean isMoved = file.renameTo(backupFile); 
-			System.out.println(isMoved);
-			logger.info(file.getName()+ "을" + backupFile.getName()+" 파일로 백업함."); 
+			System.out.println(" ////// 백업파일 이동 성공 : " + isMoved);
+			System.out.println("!!!!!!" +  file.getName()+ "을" + backupFile.getName()+" 파일로 백업함."); 
 			if(isMoved){
 				file.delete(); 
-				logger.info(file.getName() + "을(를) 삭제함.");
 			}; 
 			
 			newFile = new File(folderPath, fileName+".properties"); 
-			logger.info("새로운 메시지 파일 작성 시작" + newFile.getPath());
+			System.out.println(" 새로운 메시지 파일 작성 시작" + newFile.getPath());
 			fis = new FileInputStream(backupFile);
 			isr = new InputStreamReader(fis,"UTF-8"); 
 			br = new BufferedReader(isr); 
@@ -569,11 +568,11 @@ public class CheckMsgService {
 					if(updateMsg.containsKey(code)){
 						value = unicodeConvert((String)updateMsg.get(code)); 
 						temp = code + "=" + value; 
-						logger.info("[eidt]" + temp);
+						logger.info("\n [eidt]" + temp);
 						bw.write(temp);
 						bw.newLine();
 					}else if(deleteMsg.contains(code)){
-						logger.info("[delete]"+ code);
+						logger.info("\n [delete]"+ code);
 
 					}else{
 						//update나 삭제 되지 않은 애들..
@@ -583,7 +582,7 @@ public class CheckMsgService {
 				}
 				bw.flush();
 			}
-
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -611,6 +610,7 @@ public class CheckMsgService {
 			}
 
 		}
+		logger.info(newFile.getName() + "파일을 생성 하였습니다. ");
 		String infoText = newFile.getName()+"을 생성하였습니다."; 
 		return infoText;
 	}

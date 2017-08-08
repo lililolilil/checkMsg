@@ -131,7 +131,6 @@ public class CheckMsgController {
 		HashMap<String, Object> resultMap = new HashMap<>();
 		ArrayList<String> deletelist = new ArrayList<>();
 		HashMap<String, Object> updateMap = new HashMap<>(); 
-		HashMap<String, String> newMsgMap =  new HashMap<>(); 
 
 		try {
 			JSONObject jsonObj = new JSONObject(param);  
@@ -140,14 +139,11 @@ public class CheckMsgController {
 			String folderPath = jsonObj.getString("folderPath");
 			JSONArray files = jsonObj.getJSONArray("files"); // 파일명이 담긴 list 
 			for(int i=0; i < files.length(); i++){
-				updateMap.put(files.getString(i), newMsgMap); 
+				HashMap<String, String> inerMap = new HashMap<>(); 
+				updateMap.put(files.getString(i), inerMap); 
 			}
 			for(int i=0; i < delete.length(); i++){
 				deletelist.add(delete.getString(i).replaceAll("_", ".")); 
-			}
-			for(Object obj: deletelist){
-				System.out.println("deleteMsg");
-				System.out.println(obj.toString());
 			}
 			
 			//update해야 하는 메시지 파일별로 분류 
@@ -156,21 +152,46 @@ public class CheckMsgController {
 				String code = message.getString("code").replaceAll("_", "."); 
 				String fileName= message.getString("fileName");
 				String valueString= message.getString("valueString");
+				System.out.println(code +  "/ " + fileName +  "/ " +  valueString );
 				if(updateMap.containsKey(fileName)){
-					newMsgMap = (HashMap<String, String>) updateMap.get(fileName); 
-					newMsgMap.put(code, valueString); 
+					HashMap<String,String> inerMap = (HashMap<String, String>) updateMap.get(fileName); 
+					inerMap.put(code, valueString); 
+					/*
+					 // 디버그용 
+					System.out.println("msgmap size: "  + inerMap.size());
+					System.out.println("put >>>  " + code  + " / " + valueString);
+					Iterator<String> iner = inerMap.keySet().iterator(); 
+					while(iner.hasNext()){
+						String inercode = iner.next(); 
+						System.out.println(inercode + inerMap.get(inercode )); 
+					}*/
+					updateMap.replace(fileName, inerMap); 
 				}else{
-					newMsgMap.put(code, valueString);
-					updateMap.put(fileName, newMsgMap); 
+					throw new FileNotFoundException(" 수정할 파일 대상이 아닙니다. "); 
 				}
 			}
 			ArrayList<String> result = new ArrayList<>(); 
-
-			Iterator<String> itr = updateMap.keySet().iterator();  
+			
+			/*Iterator<String> itr = updateMap.keySet().iterator();  
+			//디버깅용 
 			while(itr.hasNext()){
-				String fileName = itr.next();
-				String info = checkMsgService.createfile((HashMap<String,String>)updateMap.get(fileName), deletelist, folderPath, fileName); 
-				logger.info(info+ "파일이 생성되었습니다.");
+				String fileNm = itr.next();
+				HashMap<String, String> updateCodeMap = (HashMap<String,String>)updateMap.get(fileNm); 
+				Iterator<String> itr2 = updateCodeMap.keySet().iterator();  
+				System.out.println("파일명: " + fileNm);
+				while(itr2.hasNext()){
+					String code = itr2.next(); 
+					System.out.println(code + " = " + updateCodeMap.get(code).toString());
+				}
+			}
+			*/
+			
+			Iterator<String> itr = updateMap.keySet().iterator();  
+
+			while(itr.hasNext()){
+				String fileNm = itr.next();
+				String info = checkMsgService.createfile((HashMap<String,String>)updateMap.get(fileNm), deletelist, folderPath, fileNm); 
+				logger.info("\n"+info);
 				result.add(info+"파일이 생성되었습니다.");  
 			}
 			resultMap.put("result", result); 

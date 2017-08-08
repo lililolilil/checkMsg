@@ -230,6 +230,9 @@
 			var newTr = tr.clone().attr("codevalue", key.replace(/\./gi, "_")).html("");
 			var message = valuelist[i];
 			var code = td.clone().text(key).attr("rowspan", valuelist.length).addClass("bossNode").append(btn.clone());
+			if(valuelist.length != files.length){
+			    code.addClass("danger"); 
+			}
 			if (message != null || message != undefined) {
 			    $.each(message, function(key, value) {
 				newTr.attr("fileNm", key);
