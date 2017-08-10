@@ -6,11 +6,6 @@
 	margin-top: 1em;
 }
 
-.deleted {
-	text-decoration: line-through;
-	color: red;
-	font-weight: bold;
-}
 </style>
 <script>
     $(document).ready(function() {
@@ -157,7 +152,7 @@
     var displayCheckbox = function(data) {
 	var checkboxArea = $(".checkboxArea").html("");
 	var checkbox = $("<input type='checkbox'>"), label = $("<label></label>");
-	div = $("<div></div>").addClass("checkbox checkbox-primary clearfix");
+	var div = $("<div></div>").addClass("checkbox checkbox-primary clearfix");
 	messagefile = data.messagefile;
 	
 	$.each(messagefile, function(key, value) {

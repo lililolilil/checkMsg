@@ -131,6 +131,7 @@ public class CheckMsgService {
 		HashMap<String, Object> syncresultMap = new HashMap<>(); 
 		
 		Iterator<String> itr = msgResultMap.keySet().iterator(); 
+		
 		while(itr.hasNext()){
 			Object fileName = itr.next();
 			entireMsg.putAll((HashMap<String,String>) msgResultMap.get(fileName));

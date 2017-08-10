@@ -53,6 +53,27 @@
 		function danger(){
 			$mybar.removeClass("progress-bar-warning").addClass("progress-bar-danger"); 
 		}
+	},
+	
+	getConfirm : function(confirmTitle, confirmMessage, callback){
+	    var confirmMessage = confirmMessage || ''; 
+	    var confirmTitle = confirmTitle || ''; 
+	    
+	    $("#confirmBox").modal({
+			show: true, 
+			backdrop: false, 
+			keyboard: false
+	    }); 
+	    $("#confirmBody").html(confirmMessage);  
+	    $("#confirmTitle").html(confirmTitle); 
+	    $("#confirmNo").click(function(){
+			$("#confirmBox").modal("hide");  
+			if(callback) callback(false); 
+	    }); 
+	    $("#confirmYes").click(function(){
+			$("#confirmBox").modal("hide"); 
+			if(callback) callback(true);  
+	    });
 	}
 	
 

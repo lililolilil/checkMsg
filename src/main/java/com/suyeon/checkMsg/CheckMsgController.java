@@ -232,9 +232,11 @@ public class CheckMsgController {
 		HashMap<String, Object> allMessage = new HashMap<>();
 		try {
 			JSONObject jsonObj = new JSONObject(syncInfo);  
-			String baseDir = jsonObj.getString("baseDir"); 
-			String messagefileDir = jsonObj.getString("messagefileDir"); 
-			allMessage = checkMsgService.getAllMessage(baseDir+messagefileDir);
+			JSONArray msgfileList = jsonObj.getJSONArray("messagefileList"); 
+			for(int i = 0; i< msgfileList.length() ; i++ ){
+				JSONObject msgFileInfo = msgfileList.getJSONObject(i);
+				allMessage.put(msgFileInfo.getString("fileName"), checkMsgService.getMessages(msgFileInfo.getString("filePath")));  
+			}
 			
 		} catch (FileNotFoundException e) {
 			resultMap.put("err","메시지 파일을 찾을 수 없습니다. 경로를 확인하세요 "); 

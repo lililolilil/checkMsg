@@ -18,8 +18,8 @@
 					data-toggle="dropdown" href="#">checkMsg<span class="caret"></span></a>
 					<ul class="dropdown-menu">
 						<li><a href="${pageContext.request.contextPath}/checkMsg/getAllMessage">전체메시지조회</a></li>
-						<li><a href="${pageContext.request.contextPath}/checkMsg/syncMessage">syncMessage</a></li>
-						<li><a href="${pageContext.request.contextPath}/checkMsg/usingMessage">checkUseless</a></li>
+						<li><a href="${pageContext.request.contextPath}/checkMsg/syncMessage">메시지간 싱크맞추기</a></li>
+						<li><a href="${pageContext.request.contextPath}/checkMsg/usingMessage">필요한 메시지 조회</a></li>
 					</ul></li>
 			</ul>
 
