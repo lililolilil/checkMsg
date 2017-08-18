@@ -37,19 +37,20 @@
 </div>
 
 <div id="confirmBox" class="modal fade" role="dialog">
-	  <div class="modal-dialog">
-	    <div class="modal-content">
-	      <div class="modal-header">
-	        <button type="button" class="close" data-dismiss="modal">&times;</button>
-	        <h4 id="confirmTitle" class="modal-title"> title </h4>
-	      </div>
-	      <div id="confirmBody" class="modal-body">
-	      	
-	      </div>
-	      <div class="modal-footer">
-	        <button id="confirmYes" type="button" class="btn btn-primary pull-right" data-dismiss="modal"> Yes </button>
-	        <button id="confirmNo" type="button" class="btn btn-default pull-left" data-dismiss="modal">No</button>
-	      </div>
-	    </div>
-	  </div>
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+				<h4 id="confirmTitle" class="modal-title">title</h4>
+			</div>
+			<div id="confirmBody" class="modal-body"></div>
+			<div class="modal-footer">
+				<button id="confirmYes" type="button"
+					class="btn btn-primary pull-right" data-dismiss="modal">
+					Yes</button>
+				<button id="confirmNo" type="button"
+					class="btn btn-default pull-left" data-dismiss="modal">No</button>
+			</div>
+		</div>
 	</div>
+</div>

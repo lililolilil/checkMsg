@@ -5,10 +5,6 @@
 <%@ taglib prefix="tiles" uri="http://tiles.apache.org/tags-tiles"%>
 <%request.setCharacterEncoding("UTF-8");%>
 <c:set var="contextPath" value="<%= request.getContextPath()%>"></c:set> 
-
-
-
-
 <script> var contextPath = "${contextPath}"</script>
 <!-- jquery -->
 <script type="text/javascript" src="<c:url value="/resources/plugins/jquery/jquery-2.1.4.min.js" />"></script>

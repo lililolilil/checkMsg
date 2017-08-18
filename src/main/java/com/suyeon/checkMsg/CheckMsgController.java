@@ -90,7 +90,7 @@ public class CheckMsgController {
 			for(int i = 0 ; i < messagefileList.length(); i++){
 				JSONObject fileinfo = messagefileList.getJSONObject(i);
 				String fileName = fileinfo.getString("fileName"); 
-				Map<String, String>messageMap = checkMsgService.getMessages(fileinfo.getString("filePath"));
+				Map<String, String>messageMap = checkMsgService.getMessages(fileinfo.getString("filePath").replaceAll("\\", "/"));
 				Iterator<String> itr = messageMap.keySet().iterator();  
 				while(itr.hasNext()){
 					String code = itr.next();  
@@ -136,7 +136,7 @@ public class CheckMsgController {
 			JSONObject jsonObj = new JSONObject(param);  
 			JSONArray delete = jsonObj.getJSONArray("deletemsg"); 
 			JSONArray update = jsonObj.getJSONArray("updatemsg");
-			String folderPath = jsonObj.getString("folderPath");
+			String folderPath = jsonObj.getString("folderPath").replaceAll("\\", "/");
 			JSONArray files = jsonObj.getJSONArray("files"); // 파일명이 담긴 list 
 			for(int i=0; i < files.length(); i++){
 				HashMap<String, String> inerMap = new HashMap<>(); 
@@ -235,7 +235,7 @@ public class CheckMsgController {
 			JSONArray msgfileList = jsonObj.getJSONArray("messagefileList"); 
 			for(int i = 0; i< msgfileList.length() ; i++ ){
 				JSONObject msgFileInfo = msgfileList.getJSONObject(i);
-				allMessage.put(msgFileInfo.getString("fileName"), checkMsgService.getMessages(msgFileInfo.getString("filePath")));  
+				allMessage.put(msgFileInfo.getString("fileName"), checkMsgService.getMessages(msgFileInfo.getString("filePath").replaceAll("\\", "/")));  
 			}
 			
 		} catch (FileNotFoundException e) {
@@ -258,7 +258,6 @@ public class CheckMsgController {
 		return "check/usingMessage";
 	}
 	@RequestMapping(value = "/usingMessage", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
-	@SuppressWarnings("unchecked")
 	@ResponseBody
 	public Map<String,Object> usingMessageCheck(@RequestBody String form_data, Model model) throws JsonParseException, JsonMappingException, IOException {
 		logger.info("find using message code~! ");
@@ -269,44 +268,41 @@ public class CheckMsgController {
 
 		try{
 			JSONObject jsonObj = new JSONObject(form_data);  
-			String baseDir = jsonObj.getString("baseDir"); 
-			String javafileDir = jsonObj.getString("javafileDir"); 
-			String viewfileDir = jsonObj.getString("viewfileDir"); 
+			//String baseDir = jsonObj.getString("baseDir"); 
+			List<Object> javafileDirs = jsonObj.getJSONArray("javafileDirs").toList(); 
+			List<Object> viewfileDirs = jsonObj.getJSONArray("viewfileDirs").toList(); 
 			String standardMsgfileDir = jsonObj.getString("standardMsgfileDir"); 
 			List<Object> javaPatterns = jsonObj.getJSONArray("javaPatterns").toList();  
 			List<Object> viewPatterns = jsonObj.getJSONArray("viewPatterns").toList();
+			HashMap<String, String> standardMsg= checkMsgService.getMessages(standardMsgfileDir.replaceAll("\\\\", "/")); 
+			ArrayList<String> javafilePath = new ArrayList<>(); 
+			ArrayList<String> viewfilePath = new ArrayList<>(); 
+			for(Object obj : javafileDirs){
+				String filepath = (String)obj; 
+				if(filepath.length()!=0){
+					javafilePath.addAll(checkMsgService.getFilePath(filepath,".java")); 
+				}
+			}
+			for(Object obj: viewfileDirs){
+				String filepath = (String)obj; 
+				if(filepath.length()!=0){
+					viewfilePath.addAll(checkMsgService.getFilePath(filepath,".jsp")); 
+				}
+			}
 			
-			reqMap.put("baseDir", baseDir); 
-			reqMap.put("javafileDir",baseDir+javafileDir); 
-			reqMap.put("viewfileDir",baseDir+viewfileDir); 
-			reqMap.put("standardMsgfileDir",standardMsgfileDir); 
-			reqMap.put("javaPatterns",javaPatterns); 
-			reqMap.put("viewPatterns",viewPatterns); 
-			checkMsgService.printMap("요청 파라미터", reqMap);
-			
-		}catch(JSONException e){
-			e.printStackTrace();
-		}catch(Exception e){
-			resultMap.put("err", "요청 파라미터를 읽어드리던 중 오류가 발생했습니다."); 
-		}
-		
-		try{
-			HashMap<String, String> standardMsg= checkMsgService.getMessages(reqMap.get("standardMsgfileDir").toString()); 
-			ArrayList<String> javafilePath = checkMsgService.getFilePath(reqMap.get("javafileDir").toString()); 
-			HashMap<String, String> javaUsingMsg = checkMsgService.extractionMessage(reqMap.get("baseDir").toString(), javafilePath, (List<String>) reqMap.get("javaPatterns")); 
-			ArrayList<String> viewfilePath = checkMsgService.getFilePath(reqMap.get("viewfileDir").toString(),".jsp"); 
-			HashMap<String, String> viewUsingMsg = checkMsgService.extractionMessage(reqMap.get("baseDir").toString(), viewfilePath, (List<String>) reqMap.get("viewPatterns")); 
+			HashMap<String, String> javaUsingMsg = checkMsgService.extractionMessage(javafilePath, javaPatterns); 
+			HashMap<String, String> viewUsingMsg = checkMsgService.extractionMessage(viewfilePath, viewPatterns); 
 			HashMap<String, String> haveToAdd = new HashMap<>(); 
-			//java 에서 쓰고 있는데 standardMsg에 없는 것... 
 			haveToAdd.putAll(checkMsgService.compareTwoHmapKey(javaUsingMsg, standardMsg));
 			haveToAdd.putAll(checkMsgService.compareTwoHmapKey(viewUsingMsg, standardMsg));
 			Map<Object, Object> mappedMsg = new HashMap<>();
 			mappedMsg = checkMsgService.mappingTwoHmap(standardMsg, javaUsingMsg, mappedMsg); 
 			mappedMsg = checkMsgService.mappingTwoHmap(standardMsg, viewUsingMsg, mappedMsg);
 			resultMap.put("haveToAdd", haveToAdd); 
-			resultMap.put("mappedMsg", mappedMsg); 
+			resultMap.put("mappedMsg", mappedMsg);
 			
-			//jsp에서 쓰고 있는데 standardMsg에 없는것 
+		}catch(JSONException e){
+			e.printStackTrace();
 		}catch(FileNotFoundException e) {
 			resultMap.put("err","standardMsg 파일을 찾을 수 없습니다. 경로: "+ reqMap.get("standardMsgfileDir").toString()); 
 		}catch(PatternSyntaxException e){

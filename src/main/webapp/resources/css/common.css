@@ -19,15 +19,6 @@
 	word-break: break-all;
 }
 
-.form-control.input_pattern {
-	display: inline-block;
-	width: 93%;
-}
-
-.addBtn {
-	width: 7%;
-}
-
 .myContainer {
 	background-color: white;
 	clear: both;
@@ -38,33 +29,6 @@
 	width: 95%;
 }
 
-.patternBox {
-	background-color: #FAFAD2;
-	border-radius: 0.5em;
-	border: 1px solid #FFE65A;
-	padding: 0.2em;
-	font-size: 0.8em;
-	color: #3c3c3c;
-}
-
-div[id$="_basicPatterns"] {
-	padding-bottom: 0.2em;
-}
-
-.btn.deletePT {
-	display: inline-block;
-	min-width: 10px;
-	padding: 0.1em 0.2em;
-	font-weight: 700;
-	line-height: 1;
-	color: #fff;
-	text-align: center;
-	white-space: nowrap;
-	vertical-align: middle;
-	font-size: 0.6em;
-	background-color: #FFA01E;
-	border-radius: 50%;
-}
 .loader {
 	border: 16px solid #f3f3f3; /* Light grey */
 	border-top: 16px solid #3498db; /* Blue */

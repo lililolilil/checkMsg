@@ -8,7 +8,6 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -77,13 +76,13 @@ public class CheckMsgService {
 	}
 	
 
-	public ArrayList<String> fileMsgCheck(String filepath, ArrayList<String> patterns){
+	public ArrayList<String> fileMsgCheck(String filepath, ArrayList<Object> patterns){
 		ArrayList<String> justlist = new ArrayList<String>(); 
 		//ArrayList<String> patterns = new ArrayList<String>(); 
 		justlist.add(filepath); 
 		//self.getI18nself.getI18n(
 		//patterns.add("self.getI18n\\(\"([^>\"']+)\""); 
-		ArrayList<String> result = new ArrayList<String>(extractionMessage("", justlist, patterns).keySet()); //키만 필요함. 
+		ArrayList<String> result = new ArrayList<String>(extractionMessage(justlist, patterns).keySet()); //키만 필요함. 
 		Collections.sort(result); 
 		return result; 
 	}
@@ -396,10 +395,10 @@ public class CheckMsgService {
 	 * 추출된 code는 code와 함께 포함되어 있는 파일을  hashmap에 저장함. 
 	 * @param basedir 
 	 * @param filepath
-	 * @param patterns
+	 * @param javaPatterns
 	 * @return usingMsg(HashMap)
 	 */
-	public HashMap<String, String> extractionMessage(String basedir, List<String> filepath, List<String> patterns){
+	public HashMap<String, String> extractionMessage(List<String> filepath, List<Object> javaPatterns){
 		BufferedReader br = null;
 		InputStreamReader isr = null; 
 		FileInputStream fis = null; 
@@ -407,18 +406,17 @@ public class CheckMsgService {
 		String temp = null; 
 		//HashMap<String, String> usingMsg = new HashMap<>(); 
 		HashMap<String, String> usingMsgLine = new HashMap<>(); 
-		for(Object obj: patterns){
+		for(Object obj: javaPatterns){
 			System.out.println("[진행]"+(String)obj+"와 일치하는 code를 추출합니다. ");
 			Pattern pattern = Pattern.compile(obj.toString());	
 			for(int i = 0; i < filepath.size(); i++) {
 				//file명 만들기 
-				String fileName = filepath.get(i).substring(basedir.length());
 				try{
 					file = new File(filepath.get(i)); 
 					fis = new FileInputStream(file);
 					isr = new InputStreamReader(fis, "UTF-8"); 
 					br = new BufferedReader(isr); 
-
+					String fileName = file.getName(); 
 					//한줄한줄 찾아보자 
 					while((temp=br.readLine())!=null){
 						Matcher match = pattern.matcher(temp.trim()); 
