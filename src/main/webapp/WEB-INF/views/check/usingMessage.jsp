@@ -15,8 +15,6 @@
 	addEvent();
     })
 </script>
-
-<div id="u_container">
 	<div class="well u_formContainer">
 		<form id="using_form" role="form">
 			<!-- <div class="form-group">
@@ -97,20 +95,23 @@
 				</div>
 			</div>
 
-			<div class="checkboxContainer">
+			<div class="checkboxContainer col-sm-12">
 				<div class="col-sm-12">
 					<label class="control-label"> 기준이 되는 메시지 파일을 하나만 선택해 주세요:</label>
 				</div>
-				<div class="myContainer radioArea clearfix col-sm-12">
+				<div class="myContainer radioArea col-sm-12">
 					<br />
 					<p class="text-center">반드시 파일을 선택 한 후 조회 하세요.</p>
 				</div>
 			</div>
-
-			<button type="reset" class="btn btn-warning">Clear form</button>
-			<button type="submit" class="btn btn-success submitBtn">Submit</button>
+			<div class="btnArea clearfix col-sm-12">
+					<button type="reset" class="btn btn-warning clearfix clearBtn">Clear form</button>
+			<button type="submit" class="btn btn-success clearfix submitBtn">Submit</button>
+			</div>
+	
 		</form>
 	</div>
+	
 	<div id="using_result" class="table-responsive resultContainer">
 		<div class="well">
 			<p>

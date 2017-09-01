@@ -37,6 +37,45 @@
 	height: 120px;
 	animation: spin 2s linear infinite;
 }
+.checkboxArea {
+	background-color: white;
+	clear: both;
+	min-height: 3em;
+	border-radius: 1em;
+	padding: 1em 4em;
+	margin: 0 1em 1em 1em;
+	width: 95%;
+}
+
+
+.itemBox {
+    background-color: #FAFAD2;
+    border-radius: 0;
+    border: 1px solid #FFE65A;
+    padding: 0.2em 0.5em;
+    font-size: 1em;
+    color: #3c3c3c;
+}
+
+div[id$="_container"] {
+	padding-bottom: 0.2em;
+}
+
+.btn.deleteBox {
+	display: inline-block;
+    min-width: 10px;
+    padding: 0.2em 0.4em;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    font-size: 0.8em;
+    background-color: #FFA01E;
+    border-radius: 50%;
+    margin-left: 0.5em; 
+}
 
 @keyframes spin { 0% {transform: rotate(0deg);} 100%{transform:rotate(360deg);} }
 

@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -500,19 +501,28 @@ public class CheckMsgService {
 		
 		return sortedHashMap; 
 	}
+
 	/** 
 	 * 메시지 파일을 수정해서 새로운 메시지 파일을 만들어 주는 서비스
 	 * @param updateMsg
 	 * @param deleteMsg
+	 * @param new fileName 
 	 * @param messagefilepath
 	 * @return
 	 */
+	
 	public String createfile(Map<String,String> updateMsg, ArrayList<String> deleteMsg, String folderPath, String fileName){
+		
+		return createfile(updateMsg, deleteMsg, folderPath, fileName, fileName); 
+	}
+	
+	public String createfile(Map<String,String> updateMsg, ArrayList<String> deleteMsg, String folderPath, String fileName, String newfileName){
 		logger.info("---------------------------------------------------------------- createFile ----------------------------------");
 		BufferedReader br = null;
 		InputStreamReader isr = null; 
 		FileInputStream fis = null; 
 		File file = null; 
+		File temp_file = null; 
 		File backupFile = null; 
 		File newFile = null; 
 		BufferedWriter bw = null; 
@@ -521,31 +531,45 @@ public class CheckMsgService {
 
 		try{
 			file = new File(folderPath+"/"+fileName+".properties"); 
-			System.out.println("수정할 파일: " +  file.getPath());
+			temp_file = new File(folderPath+"/temp_"+fileName+".properties"); // 얘로 copy 할예정임. 
+			
+			if(fileCopy(file, temp_file)){
+				System.out.println("임시파일이 생성 됨.");
+			};
+			
+			System.out.println("복사할 대상이 되는 파일: " +  file.getPath());
+			
 			File dir = new File(folderPath+"/bak");
 			// 있으면 삭제 
+			newFile= new File(folderPath+"/"+newfileName+".properties"); 
 			
-			//bakupfolder가 있는지 확인 
-			if(!dir.exists() || !dir.isDirectory()) { 
-				dir.mkdirs(); 
-		    } 
-			 String backupFileName =  fileName; 
-			do{
-				backupFileName = "bak_" +backupFileName; 
-				backupFile = new File(dir, backupFileName+".properties"); 
-			}while(backupFile.exists()); 
+			// 새로 생성해야 하는 파일명이 이미 존재 하면 백업해야 하므로...
+			if(newFile.exists()){
+				System.out.println("새로 생성할 파일명이 이미 있음.");
+				//bakupfolder가 있는지 확인 
+				if(!dir.exists() || !dir.isDirectory()) { 
+					dir.mkdirs(); 
+			    } 
+				String backupFileName =  newfileName; 
+				 
+				do{
+					backupFileName = "bak_" +backupFileName; 
+					backupFile = new File(dir, backupFileName+".properties"); 
+				}while(backupFile.exists()); 
+				
+				System.out.print(">>>> 백업된 파일 경로  :  "+ backupFile.getPath());
+				boolean isMoved = newFile.renameTo(backupFile); 
+				System.out.println(" ////// 백업파일 이동 성공 : " + isMoved);
+				System.out.println("!!!!!!" +  newFile.getName()+ "을" + backupFile.getName()+" 파일로 백업함."); 
+				//원래 파일은 삭제 해 버리자. 
+				if(isMoved){
+					newFile.delete(); 
+				}; 
+			}
 			
-			System.out.print(">>>> 백업된 파일 경로  :  "+ backupFile.getPath());
-			boolean isMoved = file.renameTo(backupFile); 
-			System.out.println(" ////// 백업파일 이동 성공 : " + isMoved);
-			System.out.println("!!!!!!" +  file.getName()+ "을" + backupFile.getName()+" 파일로 백업함."); 
-			if(isMoved){
-				file.delete(); 
-			}; 
-			
-			newFile = new File(folderPath, fileName+".properties"); 
+			newFile = new File(folderPath, newfileName+".properties"); 
 			System.out.println(" 새로운 메시지 파일 작성 시작" + newFile.getPath());
-			fis = new FileInputStream(backupFile);
+			fis = new FileInputStream(temp_file);
 			isr = new InputStreamReader(fis,"UTF-8"); 
 			br = new BufferedReader(isr); 
 			bw = new BufferedWriter(new FileWriter(newFile, true)); 
@@ -572,7 +596,6 @@ public class CheckMsgService {
 						bw.newLine();
 					}else if(deleteMsg.contains(code)){
 						logger.info("\n [delete]"+ code);
-
 					}else{
 						//update나 삭제 되지 않은 애들..
 						bw.write(temp);
@@ -608,12 +631,33 @@ public class CheckMsgService {
 				e.printStackTrace();
 			}
 
+			temp_file.delete(); 
 		}
 		logger.info(newFile.getName() + "파일을 생성 하였습니다. ");
 		String infoText = newFile.getName()+"을 생성하였습니다."; 
 		return infoText;
 	}
 
-	
-	
+	public static boolean fileCopy(File file, File temp_file){
+		try{
+			FileInputStream fis = new FileInputStream(file); 
+			FileOutputStream fos = new FileOutputStream(temp_file);  
+
+			int data = 0;
+			while((data=fis.read())!=-1) {
+				fos.write(data);
+			}
+			fis.close();
+			fos.close();
+			
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 }

@@ -1,323 +1,24 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 <%@ page session="false"%>
-<style>
-.btndiv {
-	margin-top: 1em;
-}
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<script type="text/javascript"
+	src="<c:url value="/resources/js/getAllMessage.js" />"></script>
+<link rel="stylesheet"
+	href="<c:url value="/resources/css/getAllMessage.css"/>" />
 
-</style>
 <script>
     $(document).ready(function() {
 	// test(); 
 	init();
 	addEvent();
-
     })
-
-    var test = function() {
-
-    }
-
-    var init = function() {
-		$("#baseDir").val($.cookie("baseDir"));
-		$("#messagefileDir").val($.cookie("messagefileDir"));
-		$(".resultContainer").hide();
-    }
-
-    var addEvent = function() {
-	// 가져올 메시지 파일 선택 하기 
-	$(".choosefile").on("click", function(e) {
-	    getMessageFile();
-	});
-	// 전체 메시지 가져오기 
-	$("#sync_form").on("submit", function(e) {
-	    e.preventDefault();
-	    getMessage();
-	});
-
-	// 메시지 파일 저장 버튼 클릭 
-	$(".btn-editMsgfile").on("click", function(e) {
-	    editMessagefile();
-	});
-    }
-    // 데이터 가져온 다음에 요소에 이벤트를 주는 친구 
-    var addEvent_after = function() {
-	// 수정버튼 클릭 
-
-	$(".modifyMsg").on("click",	function(e) {
-		    var codeVal = $(this).parents("tr").attr("codevalue");
-		    var $codetr = $("tr[codevalue='" + codeVal + "']");
-		    if ($codetr.hasClass("deleted")) {
-			alert("삭제한 메시지는 수정할 수 없습니다. 삭제를 취소하시고 다시 시도해 주세요.")
-		    } else if ($codetr.hasClass("edited")) {
-			//수정 취소 원래의 메시지로 돌아가자.. 
-			$(this).text("수정").removeClass("btn-warning").addClass("btn-default");
-
-			var tr = $("<tr></tr>"), td = $("<td></td>"), span = $("<span></span>");
-
-			$codetr.each(function(index) {
-			    var codevalue = codeVal.replace(/_/gi, ".");
-			    var message = messageList[codevalue][index];
-			    var $nowtr = $(this);
-			    if (message != null || message != undefined) {
-				$.each(message, function(key, value) {
-				    if (index == 0) {
-					$nowtr.find("td:not(.bossNode)").remove(); //boseNode만 빼고 remove함. 
-					$nowtr.append(td.clone().html(span.clone().text(key).addClass("fileNm"))).append(
-						td.clone().html(span.clone().text(value).addClass("valueString editable")));
-				    } else {
-					$nowtr.html("").append(td.clone().html(span.clone().text(key).addClass("fileNm"))).append(
-						td.clone().html(span.clone().text(value).addClass("valueString editable")));
-				    }
-				});
-			    } else { //없을때 
-				$nowtr.html("").append(td.clone().html(span.clone().text("없음").addClass("fileNm"))).append(
-					td.clone().html(span.clone().text("-").addClass("valueString editable")));
-			    }
-			});//codetr.each
-			$codetr.removeClass("edited");
-
-		    } else {
-			//수정 버튼 클릭 했을 때 
-			$codetr.addClass("edited");
-			var $span = $("tr[codevalue='" + codeVal + "']").find(".editable");
-			var input = $("<input>", {
-			    "type" : "text",
-			    "class" : "form-control"
-			});
-			$span.each(function(index) {
-			    var value = $(this).text();
-			    if ($(this).hasClass("fileNm")) {
-				//파일명
-				$(this).replaceWith(input.clone().addClass("fileNm").val(value));
-			    } else {
-				//valuestring 
-				$(this).replaceWith(input.clone().addClass("valueString").val(value));
-			    }
-			});
-			//this= button
-			$(this).text("수정취소").addClass("btn-warning").removeClass("btn-default");
-		    }
-
-		});
-
-	// 삭제 버튼 클릭 
-	$(".deleteMsg").on("click", function(e) {
-	    var codeVal = $(this).parents("tr").attr("codevalue");
-	    var $codetr = $("tr[codevalue='" + codeVal + "']");
-	    if ($codetr.hasClass("edited")) {
-		alert("수정중인 메시지는 삭제할 수 없습니다. 수정 취소 후 삭제 해주세요. ");
-	    } else if ($codetr.hasClass("deleted")) {// 삭제 취소 버튼이니까 삭제를 취소 해줘야 함. 
-		$codetr.removeClass("deleted");
-		$(this).text("삭제");
-	    } else {
-		$codetr.addClass("deleted");
-		$(this).text("삭제취소");
-	    }
-	});
-    }
-    var getMessageFile = function() {
-		util.progressBar("start");
-		var val_baseDir = $("#baseDir").val().replace(/\\/gi, "/"), 
-			val_messageDir = $("#messagefileDir").val().replace(/\\/gi, "/"); 
-		$.cookie("baseDir", val_baseDir);
-		$.cookie("messagefileDir", val_messageDir);
-		var url = "${pageContext.request.contextPath}/checkMsg/getFilelist";
-		var form_data = {
-		    baseDir : val_baseDir, 
-		    messagefileDir :val_messageDir
-		}
-		$.ajax({
-		    method : "POST",
-		    url : url,
-		    contentType : "application/json",
-		    //messagefileDir = C:/Users/suyeon/git/mcare-catholic-daegu/WebContent/WEB-INF/messages
-		    data : JSON.stringify(form_data),
-		    error : function(xhr, status, error) {
-			alert(error);
-			util.progressBar("stop");
-		    },
-		    success : function(data) {
-			if (data.err != null || data.err !== "" || data.err != undefined) {
-			    displayCheckbox(data);
-			} else {
-			    alert(data.err);
-			}
-		    }
-	
-		});
-		util.progressBar("stop");
-    }
-    var displayCheckbox = function(data) {
-	var checkboxArea = $(".checkboxArea").html("");
-	var checkbox = $("<input type='checkbox'>"), label = $("<label></label>");
-	var div = $("<div></div>").addClass("checkbox checkbox-primary clearfix");
-	messagefile = data.messagefile;
-	
-	$.each(messagefile, function(key, value) {
-	    var messageitem = div.clone().html(label.clone().attr("for", key.split(".")[0]).text(key)).prepend(checkbox.clone().attr({
-		"id" : key.split(".")[0],
-		"class" : "msgfile_cb styled",
-		"name" : key.split(".")[0],
-		"value" : value
-	    }));
-	    checkboxArea.append(messageitem).show();
-	});
-    }
-
-    var getMessage = function() {
-		util.progressBar("start");
-		var url = "${pageContext.request.contextPath}/checkMsg/getAllMessage";
-		var msgfileInfoList = [];
-		var $messagefile = $(".msgfile_cb:checked");
-		files = []; 
-		$messagefile.each(function(e) {
-		    var msgfileInfo = new Object;
-		    msgfileInfo.filePath = $(this).val();
-		    msgfileInfo.fileName = $(this).attr("name");
-		    msgfileInfoList.push(msgfileInfo);
-		    files.push( $(this).attr("name")); // 나중에 불러온 파일을 수정하기 위해 파라미터 생성 
-		});
-		var form_data = {
-		    messagefileList : msgfileInfoList
-		};
-		$.ajax({
-		    method : "POST",
-		    url : url,
-		    contentType : "application/json",
-		    //messagefileDir = C:/Users/suyeon/git/mcare-catholic-daegu/WebContent/WEB-INF/messages
-		    data : JSON.stringify(form_data),
-		    error : function(xhr, status, error) {
-			alert(error);
-			util.progressBar("stop");
-		    },
-		    success : function(data) {
-			if (data.err != null || data.err !== "" || data.err != undefined) {
-			    displayResult(data.result);
-			    messageList = data.result;
-			    addEvent_after();
-			} else {
-			    alert(data.err);
-			}
-		    }
-	
-		});
-		util.progressBar("stop");
-    }
-    var displayResult = function(data) {
-		$("#result").html("");
-		$(".after-btnArea").show();
-		var table = $("<table></table>"), caption = $("<caption></caption>"), thead = $("<thead></thead>"), tbody = $("<tbody></tbody>"), tr = $("<tr></tr>"), td = $("<td></td>"), span = $("<span></span>"), btn = $("<div class='clearfix'><button type='button' class='btn btn-danger deleteMsg pull-right' data-role='button'>삭제</button>"
-			+ "<button type='button' class='btn btn-default modifyMsg pull-right'>수정</button></div>");
-		var colgruop = $("<colgroup><col width='30%'/><col width='20%'/><col width='50%'/></colgroup>");
-		var newTable = table.clone().addClass("table table-bordered table-striped").html(
-			thead.clone().html(tr.clone().html(td.clone().text("code")).append(td.clone().html("value").attr("colspan", "2"))));
-		newTable.prepend(colgruop);
-		var newBody = tbody.clone().html("");
-	
-		$.each(data, function(key, value) {
-		    var blankTr = tr.clone().attr("codevalue", key.replace(/\./gi, "_")).addClass("danger").html(
-			    td.clone().html(span.clone().text("없음").addClass("fileNm"))).append(
-			    td.clone().html(span.clone().text("-").addClass("valueString editable")));
-		    var valuelist = value;
-		    for (var i = 0; i < valuelist.length; i++) {
-			var newTr = tr.clone().attr("codevalue", key.replace(/\./gi, "_")).html("");
-			var message = valuelist[i];
-			var code = td.clone().text(key).attr("rowspan", valuelist.length).addClass("bossNode").append(btn.clone());
-			if(valuelist.length != files.length){
-			    code.addClass("danger"); 
-			}
-			if (message != null || message != undefined) {
-			    $.each(message, function(key, value) {
-				newTr.attr("fileNm", key);
-				if (i == 0) {
-				    newTr.append(code).append(td.clone().html(span.clone().text(key).addClass("fileNm"))).append(
-					    td.clone().html(span.clone().text(value).addClass("valueString editable")));
-				} else {
-				    newTr.html("").append(td.clone().html(span.clone().text(key).addClass("fileNm"))).append(
-					    td.clone().html(span.clone().text(value).addClass("valueString editable")));
-				}
-				newBody.append(newTr);
-			    });//each
-			} else {
-			    newBody.append(blankTr);
-			}
-	
-		    }//for문 끝 
-	
-		});//each 
-	
-		$("#result").append(newTable.append(newBody));
-		$(".s_formContainer").hide();
-    }
-
-    var editMessagefile = function() {
-		alert("edit");
-		util.progressBar("start");
-		var param = createData();
-		var url = "${pageContext.request.contextPath}/checkMsg/editMsgfile";
-		var request = $.ajax({
-			    method : "POST",
-			    url : url,
-			    contentType : "application/json",
-			    //messagefileDir = C:/Users/suyeon/git/mcare-catholic-daegu/WebContent/WEB-INF/messages
-			    data : JSON.stringify(param),
-			    error : function(xhr, status, error) {
-				alert(error);
-			    },
-			    success : function(data) {
-				if (data.err != null || data.err !== "" || data.err != undefined) {
-				    alert(data.result);
-				    //TODO  " 메시지를 다시 불러오시겠습니까 ? "
-				} else {
-				    alert(data.err);
-				}
-		    }
-		});
-	
-		util.progressBar("stop");
-    }
-    var createData = function() {
-		var deleteMessages = []; // code만 들어감. 
-	
-		$(".deleted").each(function(e) {
-		    deleteMessages.push($(this).attr("codevalue"));
-		});
-		var updateMessages = [];
-		var param = {}; 
-		
-		$(".edited").each(function(index) {
-		    var message = new Object; // 파일별 메시지 
-		    message.code = $(this).attr("codevalue");
-		    message.fileName = $(this).attr("filenm");
-		    message.valueString = $(this).find(".valueString").val();
-		    updateMessages.push(message);
-		})
-		
-		param.deletemsg = deleteMessages;  
-		param.updatemsg = updateMessages; 
-		param.folderPath = $.cookie("baseDir") + $.cookie("messagefileDir");
-		param.files = files; 
-	
-		return param;
-    }
 </script>
-<style>
-.checkboxArea {
-	background-color: white;
-	clear: both;
-	min-height: 3em;
-	border-radius: 1em;
-	padding: 1em 4em;
-	margin: 0 1em 1em 1em;
-	width: 95%;
-}
-</style>
+
 <div id="container">
 	<div class="well s_formContainer clearfix">
 		<form id="sync_form" role="form" class="horizontal">
-			<div class="form-group">
+			<!-- <div class="form-group">
 				<div class="col-sm-12">
 					<label for="baseDir">baseDir:</label>
 				</div>
@@ -326,7 +27,7 @@
 						placeholder="베이스 디렉터리를 입력해 주세요  ex)C:/Users/git/mcare-hospital"
 						required="required">
 				</div>
-			</div>
+			</div> -->
 			<div class="form-group clearfix">
 				<div class="col-sm-12">
 					<label for="messagefileDir" class="control-label">messagefileFolder:</label>
@@ -357,18 +58,87 @@
 				<button type="submit" class="btn btn-success submitBtn">메시지
 					조회</button>
 			</div>
-
 		</form>
 
 	</div>
 	<div class="row">
 		<div class="after-btnArea" style="display: none;">
-			<div class="form-group col-sm-12">
-				<button type="button"
-					class="btn btn-primary btn-block btn-editMsgfile">수정내용을
-					반영하여 메시지 파일 생성</button>
+			<div class="input-group">
+				<div id="radioBtn" class="btn-group">
+					<a class="btn btn-primary btn-sm active" data-toggle="tooltip"
+						data-name="opType" data-target="#edit_condition" data-title="edit">파일수정</a>
+					<a class="btn btn-default btn-sm" data-toggle="tooltip"
+						data-name="opType" data-target="#create_condition"
+						data-title="create">파일생성</a>
+				</div>
+				<input type="hidden" name="opType" id="opType">
 			</div>
+
+			<div class="option_container">
+				<div id="edit_condition" class="targetContainer">
+					<div class="alert alert-info col-sm-12 clearfix">
+						<div class="col-sm-3">
+							<strong>파일 수정 </strong>
+						</div>
+						<div class="col-sm-9">
+							각 파일에 존재하는 메시지 코드에 매칭되는 문자열 값을 변경합니다.
+							<p class="text-danger">
+								<strong>주의!</strong> 메시지를 추가할 수 없습니다.
+							</p>
+						</div>
+					</div>
+					<p class="notice col-sm-12">수정한 내용을 반영할 파일을 선택해 주세요.</p>
+					<div class="editFile_cb clearfix col-sm-12"></div>
+					<div class="form-group col-sm-12">
+						<button type="button"
+							class="btn btn-primary btn-block btn-editMsgfile">수정내용을
+							반영하여 메시지 파일 생성</button>
+					</div>
+				</div>
+
+				<div id="create_condition" class="targetContainer">
+					<div class="alert alert-info col-sm-12 clearfix">
+						<div class="col-sm-2">
+							<strong>파일 생성</strong>
+						</div>
+						<div class="col-sm-9">
+							하나의 파일을 선택하여 선택한 파일을 기준으로 나머지 파일을 생성합니다. <br> 기준이 되는 메시지리소스에
+							메시지 키값이 존재하여야만 해당 키값으로 메시지 리소스를 추가 할 수있습니다.
+						</div>
+					</div>
+					
+					<div class="col-sm-6">
+						<p class="notice col-sm-12">기준이 될 파일을 선택해 주세요.</p>
+						<div class="fileBeStandard well col-sm-12"></div>
+					</div>
+					
+					<div class="col-sm-6">
+						<p class="notice col-sm-12"> 생성할 파일입니다.</p>
+						<div id="newfileName_container" class="fileWillCreate well col-sm-12">
+						</div>
+					</div>
+					<div class="col-sm-12">
+							<div class="msgFileDir col-sm-6" style="word-wrap: break-word;">
+								
+							</div>
+							<div class="col-sm-4">
+							<input type="text" class="form-control " id="input_newfileName"
+								placeholder="파일명을 입력해주세요">
+							</div>
+							<button type="button" data-item-name="newfileName"
+							class="btn btn-default pull-right col-sm-2 addBtn">파일 추가</button>
+					</div>
+					<div class="form-group col-sm-12">
+						<button type="button"
+							class="btn btn-warning btn-block btn-createMsgfile">하나의
+							파일을 기준으로 메시지파일 생성</button>
+					</div>
+				</div>
+				
+			</div>
+
 		</div>
+		
 	</div>
 	<div id="result" class="table-responsive syncMessage"></div>
 </div>

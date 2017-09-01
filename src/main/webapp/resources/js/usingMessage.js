@@ -274,7 +274,7 @@ var editMessagefile = function() {
 	alert("edit");
 	util.progressBar("start");
 	var param = createData();
-	var url = "${pageContext.request.contextPath}/checkMsg/editMsgfile";
+	var url = contextPath+"/checkMsg/editMsgfile";
 	var request = $.ajax({
 		    method : "POST",
 		    url : url,
@@ -309,7 +309,7 @@ var createData = function() {
 	
 	param.deletemsg = deleteMessages;  
 	param.updatemsg = updateMessages; 
-	param.folderPath = $.cookie("u_baseDir") + $.cookie("u_messagefileDir");
+	param.folderPath = $("#u_messagefileDir").val();
 	param.files = files; 
 
 	return param;

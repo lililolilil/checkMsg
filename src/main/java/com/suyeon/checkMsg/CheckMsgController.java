@@ -51,10 +51,10 @@ public class CheckMsgController {
 		try {
 		
 			JSONObject jsonObj = new JSONObject(form_data);  
-			String baseDir = jsonObj.getString("baseDir"); 
+			//String baseDir = jsonObj.getString("baseDir"); 
 			String messagefileDir = jsonObj.getString("messagefileDir"); 
-			logger.info(baseDir+messagefileDir);	
-			fileMap = checkMsgService.getFilePathtoMap(baseDir+messagefileDir,"properties"); 
+			logger.info(messagefileDir);	
+			fileMap = checkMsgService.getFilePathtoMap(messagefileDir,".properties"); 
 		}catch (FileNotFoundException e){
 			resultMap.put("err", " 파일경로를 다시 확인해 주세요."); 
 		}catch (Exception e) {
@@ -74,6 +74,7 @@ public class CheckMsgController {
 		return "check/getAllMessage";
 	}
 	
+	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/getAllMessage", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
 	@ResponseBody
 	public Map<String,Object> getAllMessage(@RequestBody String form_data, Model model){
@@ -81,39 +82,42 @@ public class CheckMsgController {
 
 		HashMap<String, Object> resultMap = new HashMap<>();
 
-		HashMap<String, Object> allMessage = new HashMap<>();
 		HashMap<String, Object> message= new HashMap<>();
 		
 		try {
 			JSONObject jsonObj = new JSONObject(form_data);  
 			JSONArray messagefileList = jsonObj.getJSONArray("messagefileList"); 
+			ArrayList<String> fileNames = new ArrayList<>();
+			for(int i = 0 ;  i<messagefileList.length(); i++){
+				fileNames.add(messagefileList.getJSONObject(i).getString("fileName"));
+			}
+			
 			for(int i = 0 ; i < messagefileList.length(); i++){
 				JSONObject fileinfo = messagefileList.getJSONObject(i);
-				String fileName = fileinfo.getString("fileName"); 
-				Map<String, String>messageMap = checkMsgService.getMessages(fileinfo.getString("filePath").replaceAll("\\", "/"));
+				String fileName = fileinfo.getString("fileName");
+				Map<String, String>messageMap = checkMsgService.getMessages(fileinfo.getString("filePath"));
 				Iterator<String> itr = messageMap.keySet().iterator();  
+
 				while(itr.hasNext()){
-					String code = itr.next();  
-					if(message.keySet().contains(code)){
-						ArrayList<Object> valuelist = (ArrayList<Object>) message.get(code); 
-						Map<String,String> value = new HashMap<>(); 
-						value.put(fileName, messageMap.get(code)); 
-						valuelist.add(value); 
-						message.replace(code, valuelist); 
-					}else{
-						ArrayList<Object> valuelist = new ArrayList<>(); 
-						Map<String,String> value = new HashMap<>(); 
-						value.put(fileName, messageMap.get(code)); 
-						valuelist.add(value); 
-						message.put(code, valuelist); 
-					}	
+					HashMap<String, String> valueMap = new HashMap<>(); 
+					String code = itr.next(); 
+					if(!message.keySet().contains(code)){
+						for(int j = 0; j<fileNames.size(); j++){
+							valueMap.put(fileNames.get(j), ""); 
+						}
+						message.put(code, valueMap); 
+					}
+					valueMap = (HashMap<String, String>) message.get(code); 
+					valueMap.replace(fileName, messageMap.get(code)); 
+					message.put(code, valueMap); 
+					checkMsgService.printMap(code, (Map) message.get(code));  
 				}
 				
 			}
-			resultMap.put("message", message); 
 		} catch (FileNotFoundException e) {
 			resultMap.put("err","메시지 파일을 찾을 수 없습니다. 경로를 확인하세요 "); 
 		} catch (Exception e) {
+			e.printStackTrace();
 			resultMap.put("err","파라미터 오류 "); 
 		}
 		Map<Object, Object> SortedMessage = checkMsgService.sortByKey(message, true); 
@@ -136,8 +140,9 @@ public class CheckMsgController {
 			JSONObject jsonObj = new JSONObject(param);  
 			JSONArray delete = jsonObj.getJSONArray("deletemsg"); 
 			JSONArray update = jsonObj.getJSONArray("updatemsg");
-			String folderPath = jsonObj.getString("folderPath").replaceAll("\\", "/");
-			JSONArray files = jsonObj.getJSONArray("files"); // 파일명이 담긴 list 
+			String folderPath = jsonObj.getString("folderPath");
+			JSONArray files = jsonObj.getJSONArray("files"); // 파일명이 담긴 list
+
 			for(int i=0; i < files.length(); i++){
 				HashMap<String, String> inerMap = new HashMap<>(); 
 				updateMap.put(files.getString(i), inerMap); 
@@ -211,7 +216,47 @@ public class CheckMsgController {
 		return resultMap;
 	}
 	
-	
+	@SuppressWarnings("unchecked")
+	@RequestMapping(value = "/createMsgfile", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	@ResponseBody
+	public Map<String,Object> createMsgfile(@RequestBody String param, Model model){
+		logger.info("getAllMsg - createMsgfile");
+
+		HashMap<String, Object> resultMap = new HashMap<>();
+		ArrayList<String> deletelist = new ArrayList<>();
+		HashMap<String, Object> updateMap = new HashMap<>(); 
+
+		try {
+			JSONObject jsonObj = new JSONObject(param);  
+			String folderPath = jsonObj.getString("folderPath");
+			JSONObject fileMessageMap = jsonObj.getJSONObject("fileMessageMap"); //{file: {code:val,code:val.....}} 
+			JSONArray fileList = jsonObj.getJSONArray("fileList"); 
+			String standardFile = jsonObj.getString("standardFile"); // messagefile 경로 
+			
+			for(int i=0; i < fileList.length(); i++){
+				String fileName = fileList.getString(i);  
+				String info = ""; 
+				if(fileName.equals(standardFile)){
+					info = checkMsgService.createfile((HashMap<String,String>)fileMessageMap.get(fileName), deletelist, folderPath, fileName); 
+				}else{
+					info = checkMsgService.createfile((HashMap<String,String>)fileMessageMap.get(fileName), deletelist, folderPath, standardFile, fileName); 
+				}; 
+				
+			}
+			
+		}catch (JSONException e) {
+			e.printStackTrace();
+			resultMap.put("err","파라미터 오류 "); 
+
+		}catch (Exception e) {
+			e.printStackTrace();
+			resultMap.put("err","파라미터 오류 "); 
+
+		}
+
+		// 체크 해야 하는 메시지 
+		return resultMap;
+	}
 	/**
 	 * Simply selects the home view to render by returning its name.
 	 */
@@ -235,7 +280,7 @@ public class CheckMsgController {
 			JSONArray msgfileList = jsonObj.getJSONArray("messagefileList"); 
 			for(int i = 0; i< msgfileList.length() ; i++ ){
 				JSONObject msgFileInfo = msgfileList.getJSONObject(i);
-				allMessage.put(msgFileInfo.getString("fileName"), checkMsgService.getMessages(msgFileInfo.getString("filePath").replaceAll("\\", "/")));  
+				allMessage.put(msgFileInfo.getString("fileName"), checkMsgService.getMessages(msgFileInfo.getString("filePath")));  
 			}
 			
 		} catch (FileNotFoundException e) {
