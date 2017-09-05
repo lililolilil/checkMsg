@@ -4,7 +4,9 @@
 	color: red;
 	font-weight: bold;
 }
-
+.clearfix{
+	clear:both; 
+}
 .container {
 	width: 100%;
 	clear: both;

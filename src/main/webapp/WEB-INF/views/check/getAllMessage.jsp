@@ -128,7 +128,7 @@
 							<button type="button" data-item-name="newfileName"
 							class="btn btn-default pull-right col-sm-2 addBtn">파일 추가</button>
 					</div>
-					<div class="form-group col-sm-12">
+					<div class="form-group col-sm-12 clearfix">
 						<button type="button"
 							class="btn btn-warning btn-block btn-createMsgfile">하나의
 							파일을 기준으로 메시지파일 생성</button>

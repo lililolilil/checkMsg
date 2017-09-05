@@ -164,7 +164,6 @@ var displayRadio = function(data) {
 	});
 }
 var getUsingResult = function(){
-    debugger;
 	/*$.cookie("javafileDir", $("#input_javaDir").val().replace(/\\/gi, "/")); 		
 	$.cookie("viewfileDir", $("#input_viewDir").val().replace(/\\/gi, "/")); */		
 

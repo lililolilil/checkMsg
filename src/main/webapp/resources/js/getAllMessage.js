@@ -27,7 +27,7 @@ var addEvent = function() {
     });
 
     $(".btn-createMsgfile").on("click",function(e){
-	createMsgfile(); 
+	createMessagefile(); 
     }); 
 
     $('#radioBtn a').on('click', function(){
@@ -48,14 +48,43 @@ var addEvent = function() {
 	var $itemContainer = $("#"+itemName+"_container");  
 	var itemValue = $("#input_"+itemName).val(); 
 	var itemBox =  $("<div class='itemBox'><button type='button' class='btn deleteBox pull-right' data-role='button'>x</button></div>");
+	itemBox.attr("itemvalue",itemValue); 
 	var span = $("<span></span>").addClass(itemName).text(itemValue); 
 	itemBox.prepend(span);  
 	$itemContainer.append(itemBox); 
 	$("#input_"+itemName).val("");
+	addTr(itemValue); 
     }); 
+    
     $(document).on("click", ".deleteBox", function(e){
+	var fileNm = $(this).parent().attr("itemvalue"); 
+	deleteTr(fileNm);
 	$(this).parent().remove(); 
     }); 
+}
+
+var addTr = function(newFileNm){
+    var $boss = $(".bossNode"); 
+    var row = Number($boss.eq(0).attr("rowspan")); 
+    var newFileNm = newFileNm; 
+    row += 1; 
+    $boss.attr("rowspan",row); 
+    var stdMsgfileNm = $(".msgfile_std:checked").data("filename");
+    
+    $stdFile = $("tr[filenm='"+stdMsgfileNm+"']"); 
+    $stdFile.each(function(e){
+	$this = $(this);  
+	$clonedTr = $this.clone(); 
+	if($clonedTr.find(".bossNode").size()>0){
+	    $clonedTr.find(".bossNode").remove(); 
+	}
+	$clonedTr.find(".fileNm").text(newFileNm); 
+	$clonedTr.attr("filenm",newFileNm); 
+	$this.after($clonedTr); 
+    });	
+}
+var deleteTr = function(fileNm){
+    
 }
 //데이터 가져온 다음에 요소에 이벤트를 주는 친구 
 var addEvent_after = function() {
@@ -152,11 +181,31 @@ var getMessageFile = function() {
     });
     util.progressBar("stop");
 }
+var displayRadio = function(files){
+    var radioArea = $(".fileBeStandard").html("");
+    var radio = $("<input type='radio'>"), label = $("<label></label>");
+    var div = $("<div></div>").addClass("clearfix");
+    $.each(files, function(index, value) {
+	var fileName = value; 
+	//파일 생성 시 기준 파일을 정하기 위한 라디오 버튼 
+	var fileitem =  div.clone().addClass("radio radio-primary").css("padding-left","2em").html(label.clone().attr("for", "std_"+fileName).text(fileName)).prepend(radio.clone().attr({
+	    "class" : "msgfile_std styled",
+	    "name" : "standardfileName", 
+	    "id"	: "std_"+fileName,
+	    "data-fileName" : fileName
+	}));
+	// 파일 생성 시 파일을 생성하기 위한 파일 명컨테이너에도 넣어줌.
+	var $newFileNmContainer = $("#newfileName_container"),
+	    itemBox =  $("<div class='itemBox'><button type='button' class='btn deleteBox pull-right' data-role='button'>x</button></div>"),
+	    span = $("<span></span>").addClass("newfileName").text(fileName); 
+	itemBox.prepend(span);  
+	radioArea.append(fileitem);
+	$newFileNmContainer.append(itemBox); 
+    }); 
+}; 
 var displayCheckbox = function(data) {
     var checkboxArea = $(".checkboxArea").html("");
-    var radioArea = $(".fileBeStandard").html("");
     var checkbox = $("<input type='checkbox'>"), label = $("<label></label>");
-    var radio = $("<input type='radio'>"), label = $("<label></label>");
     var div = $("<div></div>").addClass("clearfix");
     messagefile = data.messagefile;
     $.each(messagefile, function(key, value) {
@@ -167,56 +216,12 @@ var displayCheckbox = function(data) {
 	    "name" : fileName, 
 	    "value" : value
 	}));
-	//파일 생성 시 기준 파일을 정하기 위한 라디오 버튼 
-	var fileitem =  div.clone().addClass("radio radio-primary").css("padding-left","2em").html(label.clone().attr("for", "std_"+fileName).text(key)).prepend(radio.clone().attr({
-	    "class" : "msgfile_std styled",
-	    "name" : "standardfileName", 
-	    "id"	: "std_"+fileName,
-	    "data-fileName" : fileName, 
-	    "data-filePath" : value
-	}));
-	// 파일 생성 시 파일을 생성하기 위한 파일 명컨테이너에도 넣어줌.
-	var $newFileNmContainer = $("#newfileName_container"),
-	    itemBox =  $("<div class='itemBox'><button type='button' class='btn deleteBox pull-right' data-role='button'>x</button></div>"),
-	    span = $("<span></span>").addClass("newfileName").text(fileName); 
-	itemBox.prepend(span);  
-	
 	checkboxArea.append(messageitem).show();
-	radioArea.append(fileitem);
-	$newFileNmContainer.append(itemBox); 
-
-
     });
     // radio 버튼도 필요할 것 같음. 
 
 }
 
-var displayRadio = function(data) {
-    var radioArea = $(".radioArea").html("");
-    var radio = $("<input type='radio'>"), label = $("<label></label>");
-    var checkbox = $("<input type='checkbox'>"), label = $("<label></label>");
-    var div = $("<div></div>").addClass("clearfix");
-    messagefile = data.messagefile;
-    var $modalBody = $("#chooseFileModal").find(".modal-body"); 
-    $.each(messagefile, function(key, value) {
-	var fileName =  key.split(".")[0]; 
-	var messageitem = div.clone().addClass("radio radio-primary").html(label.clone().attr("for", key.split(".")[0]).text(key)).prepend(radio.clone().attr({
-	    "id" : fileName,
-	    "class" : "msgfile_r styled",
-	    "name" : "standardMsg", 
-	    "value" : value
-	}));
-	// 메시지를 삭제할 메시지 파일을 modal창에 표시 할 체크 박스 
-	var fileItem =  div.clone().css("padding","0 3em").addClass("checkbox checkbox-primary").html(label.clone().attr("for", "edit_"+key.split(".")[0]).text(key)).prepend(checkbox.clone().attr({
-	    "class" : "msgfile_cb styled",
-	    "name" : "eidtfiles", 
-	    "id"	: "edit_"+fileName, 
-	    "value" : fileName
-	}));
-	$modalBody.append(fileItem); 
-	radioArea.append(messageitem).show();
-    });
-}
 
 var getMessage = function() {
     util.progressBar("start");
@@ -231,6 +236,9 @@ var getMessage = function() {
 	msgfileInfoList.push(msgfileInfo);
 	files.push( $(this).attr("name")); // 나중에 불러온 파일을 수정하기 위해 파라미터 생성 
     });
+    
+    displayRadio(files); 
+    
     var form_data = {
 	    messagefileList : msgfileInfoList
     };
@@ -348,7 +356,7 @@ var createEditData = function() {
 var createMessagefile = function(){
     alert("edit");
     util.progressBar("start");
-    var param = createEditData();
+    var param = createMessageData();
     var url = contextPath + "/checkMsg/editMsgfile";
     var request = $.ajax({
 	method : "POST",
