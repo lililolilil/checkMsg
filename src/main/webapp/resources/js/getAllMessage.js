@@ -44,20 +44,37 @@ var addEvent = function() {
     }); 
     $(".addBtn").on("click", function(e){
 	// 새로운 item을 그위에 있는  container에 추가 한다. 
-	var itemName = $(this).data("itemName");
-	var $itemContainer = $("#"+itemName+"_container");  
-	var itemValue = $("#input_"+itemName).val(); 
+	if($(".msgfile_std:checked").size()==0){
+	    alert("기준이 될 파일을 선택하셔야 합니다."); 
+	    return null; 
+	}
+	var 	itemName = $(this).data("itemName"), 
+	$itemContainer = $("#"+itemName+"_container"), 
+	$itemInput = $("#input_"+itemName); 
+
+	var itemValue = $itemInput.val(); 
+
+	if(itemValue === "" || itemValue == null || itemValue == undefined){
+	    alert("파일명을 입력해 주세요."); 
+	    $itemInput.focus(); 
+	    return null; 
+	}
+	// 생성. 
 	var itemBox =  $("<div class='itemBox'><button type='button' class='btn deleteBox pull-right' data-role='button'>x</button></div>");
 	itemBox.attr("itemvalue",itemValue); 
 	var span = $("<span></span>").addClass(itemName).text(itemValue); 
 	itemBox.prepend(span);  
 	$itemContainer.append(itemBox); 
-	$("#input_"+itemName).val("");
+	$itemInput.val("");
 	addTr(itemValue); 
     }); 
-    
+
     $(document).on("click", ".deleteBox", function(e){
 	var fileNm = $(this).parent().attr("itemvalue"); 
+	if($(this).hasClass("initfile")){
+	    var $radioBtnDiv = $("#std_"+fileNm).parent("div");
+	    $radioBtnDiv.remove(); 
+	}
 	deleteTr(fileNm);
 	$(this).parent().remove(); 
     }); 
@@ -70,7 +87,7 @@ var addTr = function(newFileNm){
     row += 1; 
     $boss.attr("rowspan",row); 
     var stdMsgfileNm = $(".msgfile_std:checked").data("filename");
-    
+
     $stdFile = $("tr[filenm='"+stdMsgfileNm+"']"); 
     $stdFile.each(function(e){
 	$this = $(this);  
@@ -84,8 +101,23 @@ var addTr = function(newFileNm){
     });	
 }
 var deleteTr = function(fileNm){
-    
+    var $fileTr = $("tr[filenm='"+fileNm+"']"); 
+    var $boss = $(".bossNode"); 
+    var row = Number($boss.eq(0).attr("rowspan")); 
+    row -= 1 ; 
+    $boss.attr("rowspan",row); 
+    $fileTr.each(function(e){
+	$this = $(this); 
+	if($this.find("td.bossNode").size()>0){
+	    debugger;
+	    var $cloned_boss = $this.find("td.bossNode").clone();  
+	    $this.next("tr").prepend($cloned_boss); 
+	}
+    })
+
+    $fileTr.remove(); 
 }
+
 //데이터 가져온 다음에 요소에 이벤트를 주는 친구 
 var addEvent_after = function() {
     // 수정버튼 클릭 
@@ -196,8 +228,8 @@ var displayRadio = function(files){
 	}));
 	// 파일 생성 시 파일을 생성하기 위한 파일 명컨테이너에도 넣어줌.
 	var $newFileNmContainer = $("#newfileName_container"),
-	    itemBox =  $("<div class='itemBox'><button type='button' class='btn deleteBox pull-right' data-role='button'>x</button></div>"),
-	    span = $("<span></span>").addClass("newfileName").text(fileName); 
+	itemBox =  $("<div class='itemBox' itemvalue='"+fileName+"'><button type='button' class='btn deleteBox pull-right initfile' data-role='button'>x</button></div>"),
+	span = $("<span></span>").addClass("newfileName").text(fileName); 
 	itemBox.prepend(span);  
 	radioArea.append(fileitem);
 	$newFileNmContainer.append(itemBox); 
@@ -236,9 +268,9 @@ var getMessage = function() {
 	msgfileInfoList.push(msgfileInfo);
 	files.push( $(this).attr("name")); // 나중에 불러온 파일을 수정하기 위해 파라미터 생성 
     });
-    
+
     displayRadio(files); 
-    
+
     var form_data = {
 	    messagefileList : msgfileInfoList
     };
@@ -347,17 +379,17 @@ var createEditData = function() {
 
     param.deletemsg = deleteMessages;  
     param.updatemsg = updateMessages; 
-    param.folderPath = $("#messagefileDir");
+    param.folderPath = $("#messagefileDir").val();
     param.files = files; 
 
     return param;
 }
 
 var createMessagefile = function(){
-    alert("edit");
+    alert("createFile");
     util.progressBar("start");
     var param = createMessageData();
-    var url = contextPath + "/checkMsg/editMsgfile";
+    var url = contextPath + "/checkMsg/createMsgfile" ;
     var request = $.ajax({
 	method : "POST",
 	url : url,
@@ -381,16 +413,30 @@ var createMessagefile = function(){
 }
 var createMessageData = function() {
     var deleteMessages = []; // code만 들어감. 
-
-    $(".deleted").each(function(e) {
-	deleteMessages.push($(this).data("code"));
-    });
-    var messageMap = {}; 
+    var fileMap = {}; 
+    var fileList = []; 
     var param = {}; 
+    var $itemBox = $("#newfileName_container").find(".itemBox"); 
+    $itemBox.each(function(e){
+	var fileName = $(this).attr("itemvalue"); 
+	var messageMap = {}; 
+	var $tr = $("tr[filenm='"+fileName+"'"); 
+	$tr.each(function(e){
+	    var code = $(this).data("code").replace(/\_/gi,"."), 
+	    	value = $(this).find(".valueString").text();  
+	    messageMap[code]= value; 
+	}); 
+	fileMap[fileName] = messageMap; 
+	fileList.push(fileName); 
+    }); 
+    
+    var stdFileNm = $(".msgfile_std:checked").data("filename");
+    
+    param.folderPath = $("#messagefileDir").val();
+    param.fileList = fileList;
+    param.standardFile = stdFileNm; 
+    param.fileMessageMap = fileMap;  
     param.deletemsg = deleteMessages;  
-    param.updatemsg = updateMessages; 
-    param.folderPath = $.cookie("messagefileDir");
-    param.files = files; 
 
     return param;
 }

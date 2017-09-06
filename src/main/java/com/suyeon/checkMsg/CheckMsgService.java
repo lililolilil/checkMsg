@@ -23,6 +23,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -504,19 +507,19 @@ public class CheckMsgService {
 
 	/** 
 	 * 메시지 파일을 수정해서 새로운 메시지 파일을 만들어 주는 서비스
-	 * @param updateMsg
-	 * @param deleteMsg
+	 * @param codeAndVal
+	 * @param deletelist
 	 * @param new fileName 
 	 * @param messagefilepath
 	 * @return
 	 */
 	
-	public String createfile(Map<String,String> updateMsg, ArrayList<String> deleteMsg, String folderPath, String fileName){
+	public String createfile(HashMap<String, Object> codeAndVal, List<Object> deletelist, String folderPath, String fileName){
 		
-		return createfile(updateMsg, deleteMsg, folderPath, fileName, fileName); 
+		return createfile(codeAndVal, deletelist, folderPath, fileName, fileName); 
 	}
 	
-	public String createfile(Map<String,String> updateMsg, ArrayList<String> deleteMsg, String folderPath, String fileName, String newfileName){
+	public String createfile(Map<String,Object> updateMsg, List<Object> deletelist, String folderPath, String fileName, String newfileName){
 		logger.info("---------------------------------------------------------------- createFile ----------------------------------");
 		BufferedReader br = null;
 		InputStreamReader isr = null; 
@@ -526,7 +529,6 @@ public class CheckMsgService {
 		File backupFile = null; 
 		File newFile = null; 
 		BufferedWriter bw = null; 
-		FileWriter fw = null; 
 		String temp = null; 
 
 		try{
@@ -534,7 +536,7 @@ public class CheckMsgService {
 			temp_file = new File(folderPath+"/temp_"+fileName+".properties"); // 얘로 copy 할예정임. 
 			
 			if(fileCopy(file, temp_file)){
-				System.out.println("임시파일이 생성 됨.");
+				System.out.println("임시파일이 생성 됨." + temp_file.getPath());
 			};
 			
 			System.out.println("복사할 대상이 되는 파일: " +  file.getPath());
@@ -555,12 +557,14 @@ public class CheckMsgService {
 				do{
 					backupFileName = "bak_" +backupFileName; 
 					backupFile = new File(dir, backupFileName+".properties"); 
+
 				}while(backupFile.exists()); 
 				
 				System.out.print(">>>> 백업된 파일 경로  :  "+ backupFile.getPath());
 				boolean isMoved = newFile.renameTo(backupFile); 
 				System.out.println(" ////// 백업파일 이동 성공 : " + isMoved);
 				System.out.println("!!!!!!" +  newFile.getName()+ "을" + backupFile.getName()+" 파일로 백업함."); 
+				
 				//원래 파일은 삭제 해 버리자. 
 				if(isMoved){
 					newFile.delete(); 
@@ -569,7 +573,9 @@ public class CheckMsgService {
 			
 			newFile = new File(folderPath, newfileName+".properties"); 
 			System.out.println(" 새로운 메시지 파일 작성 시작" + newFile.getPath());
-			fis = new FileInputStream(temp_file);
+			fileCopy(temp_file, newFile); 
+			temp_file.delete(); 
+			fis = new FileInputStream(newFile);
 			isr = new InputStreamReader(fis,"UTF-8"); 
 			br = new BufferedReader(isr); 
 			bw = new BufferedWriter(new FileWriter(newFile, true)); 
@@ -594,8 +600,8 @@ public class CheckMsgService {
 						logger.info("\n [eidt]" + temp);
 						bw.write(temp);
 						bw.newLine();
-					}else if(deleteMsg.contains(code)){
-						logger.info("\n [delete]"+ code);
+					}else if(deletelist.contains(code)){
+						logger.info("\n [delete]"+ (String)code);
 					}else{
 						//update나 삭제 되지 않은 애들..
 						bw.write(temp);
@@ -630,8 +636,6 @@ public class CheckMsgService {
 			}catch (IOException e) {
 				e.printStackTrace();
 			}
-
-			temp_file.delete(); 
 		}
 		logger.info(newFile.getName() + "파일을 생성 하였습니다. ");
 		String infoText = newFile.getName()+"을 생성하였습니다."; 
@@ -660,4 +664,48 @@ public class CheckMsgService {
 		}
 	}
 
+	public Map<String, Object> jsonToMap(JSONObject json) throws JSONException {
+	    Map<String, Object> retMap = new HashMap<String, Object>();
+
+	    if(json != JSONObject.NULL) {
+	        retMap = toMap(json);
+	    }
+	    return retMap;
+	}
+
+	public Map<String, Object> toMap(JSONObject object) throws JSONException {
+	    Map<String, Object> map = new HashMap<String, Object>();
+
+	    Iterator<String> keysItr = object.keys();
+	    while(keysItr.hasNext()) {
+	        String key = keysItr.next();
+	        Object value = object.get(key);
+
+	        if(value instanceof JSONArray) {
+	            value = toList((JSONArray) value);
+	        }
+
+	        else if(value instanceof JSONObject) {
+	            value = toMap((JSONObject) value);
+	        }
+	        map.put(key, value);
+	    }
+	    return map;
+	}
+
+	public List<Object> toList(JSONArray array) throws JSONException {
+	    List<Object> list = new ArrayList<Object>();
+	    for(int i = 0; i < array.length(); i++) {
+	        Object value = array.get(i);
+	        if(value instanceof JSONArray) {
+	            value = toList((JSONArray) value);
+	        }
+
+	        else if(value instanceof JSONObject) {
+	            value = toMap((JSONObject) value);
+	        }
+	        list.add(value);
+	    }
+	    return list;
+	}
 }

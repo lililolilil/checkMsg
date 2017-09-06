@@ -133,12 +133,12 @@ public class CheckMsgController {
 		logger.info("getAllMessage");
 
 		HashMap<String, Object> resultMap = new HashMap<>();
-		ArrayList<String> deletelist = new ArrayList<>();
+		List<Object> deletelist = new ArrayList<>();
 		HashMap<String, Object> updateMap = new HashMap<>(); 
 
 		try {
 			JSONObject jsonObj = new JSONObject(param);  
-			JSONArray delete = jsonObj.getJSONArray("deletemsg"); 
+			JSONArray deletemsg = jsonObj.getJSONArray("deletemsg"); 
 			JSONArray update = jsonObj.getJSONArray("updatemsg");
 			String folderPath = jsonObj.getString("folderPath");
 			JSONArray files = jsonObj.getJSONArray("files"); // 파일명이 담긴 list
@@ -147,9 +147,8 @@ public class CheckMsgController {
 				HashMap<String, String> inerMap = new HashMap<>(); 
 				updateMap.put(files.getString(i), inerMap); 
 			}
-			for(int i=0; i < delete.length(); i++){
-				deletelist.add(delete.getString(i).replaceAll("_", ".")); 
-			}
+			
+			deletelist = checkMsgService.toList(deletemsg); 
 			
 			//update해야 하는 메시지 파일별로 분류 
 			for(int j=0; j < update.length(); j++){
@@ -195,7 +194,7 @@ public class CheckMsgController {
 
 			while(itr.hasNext()){
 				String fileNm = itr.next();
-				String info = checkMsgService.createfile((HashMap<String,String>)updateMap.get(fileNm), deletelist, folderPath, fileNm); 
+				String info = checkMsgService.createfile((HashMap<String,Object>)updateMap.get(fileNm), deletelist, folderPath, fileNm); 
 				logger.info("\n"+info);
 				result.add(info+"파일이 생성되었습니다.");  
 			}
@@ -223,26 +222,31 @@ public class CheckMsgController {
 		logger.info("getAllMsg - createMsgfile");
 
 		HashMap<String, Object> resultMap = new HashMap<>();
-		ArrayList<String> deletelist = new ArrayList<>();
-		HashMap<String, Object> updateMap = new HashMap<>(); 
+		List<Object> deletelist = new ArrayList<>(); 
 
 		try {
 			JSONObject jsonObj = new JSONObject(param);  
 			String folderPath = jsonObj.getString("folderPath");
 			JSONObject fileMessageMap = jsonObj.getJSONObject("fileMessageMap"); //{file: {code:val,code:val.....}} 
 			JSONArray fileList = jsonObj.getJSONArray("fileList"); 
+			JSONArray deletemsg = jsonObj.getJSONArray("deletemsg"); 
 			String standardFile = jsonObj.getString("standardFile"); // messagefile 경로 
+			
+			deletelist = checkMsgService.toList(deletemsg); 
 			
 			for(int i=0; i < fileList.length(); i++){
 				String fileName = fileList.getString(i);  
 				String info = ""; 
+				Map<String, Object> codeAndVal  = checkMsgService.jsonToMap((JSONObject)fileMessageMap.get(fileName)); 
 				if(fileName.equals(standardFile)){
-					info = checkMsgService.createfile((HashMap<String,String>)fileMessageMap.get(fileName), deletelist, folderPath, fileName); 
+					info = checkMsgService.createfile((HashMap<String,Object>)codeAndVal, deletelist, folderPath, fileName); 
 				}else{
-					info = checkMsgService.createfile((HashMap<String,String>)fileMessageMap.get(fileName), deletelist, folderPath, standardFile, fileName); 
+					info = checkMsgService.createfile((HashMap<String,Object>)codeAndVal.get(fileName), deletelist, folderPath, standardFile, fileName); 
 				}; 
 				
+				resultMap.put("info"+i, info); 
 			}
+			
 			
 		}catch (JSONException e) {
 			e.printStackTrace();
