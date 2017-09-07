@@ -8,7 +8,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -521,67 +523,47 @@ public class CheckMsgService {
 	
 	public String createfile(Map<String,Object> updateMsg, List<Object> deletelist, String folderPath, String fileName, String newfileName){
 		logger.info("---------------------------------------------------------------- createFile ----------------------------------");
-		BufferedReader br = null;
-		InputStreamReader isr = null; 
-		FileInputStream fis = null; 
 		File file = null; 
 		File temp_file = null; 
 		File backupFile = null; 
 		File newFile = null; 
-		BufferedWriter bw = null; 
-		String temp = null; 
-
+		System.out.println( ">>>>" +folderPath + "/" + fileName + ">>>>>>>>" + newfileName);
+		
 		try{
-			file = new File(folderPath+"/"+fileName+".properties"); 
-			temp_file = new File(folderPath+"/temp_"+fileName+".properties"); // 얘로 copy 할예정임. 
+			//standardFile 
+			file = new File(folderPath, fileName+".properties"); 
+			temp_file = new File(folderPath, "temp_"+fileName+".properties"); // 얘로 copy 할예정임. 
 			
 			if(fileCopy(file, temp_file)){
 				System.out.println("임시파일이 생성 됨." + temp_file.getPath());
 			};
 			
-			System.out.println("복사할 대상이 되는 파일: " +  file.getPath());
-			
-			File dir = new File(folderPath+"/bak");
-			// 있으면 삭제 
-			newFile= new File(folderPath+"/"+newfileName+".properties"); 
+			System.out.println("복사할 대상이 되는 파일: " +  temp_file.getName());
 			
 			// 새로 생성해야 하는 파일명이 이미 존재 하면 백업해야 하므로...
-			if(newFile.exists()){
-				System.out.println("새로 생성할 파일명이 이미 있음.");
-				//bakupfolder가 있는지 확인 
-				if(!dir.exists() || !dir.isDirectory()) { 
-					dir.mkdirs(); 
-			    } 
-				String backupFileName =  newfileName; 
-				 
-				do{
-					backupFileName = "bak_" +backupFileName; 
-					backupFile = new File(dir, backupFileName+".properties"); 
-
-				}while(backupFile.exists()); 
+			if(fileName.equals(newfileName)){
+				fileBackup(file); 
 				
-				System.out.print(">>>> 백업된 파일 경로  :  "+ backupFile.getPath());
-				boolean isMoved = newFile.renameTo(backupFile); 
-				System.out.println(" ////// 백업파일 이동 성공 : " + isMoved);
-				System.out.println("!!!!!!" +  newFile.getName()+ "을" + backupFile.getName()+" 파일로 백업함."); 
-				
-				//원래 파일은 삭제 해 버리자. 
-				if(isMoved){
-					newFile.delete(); 
-				}; 
+			}else{
+				backupFile= new File(folderPath, newfileName+".properties"); 
+				fileBackup(backupFile); 
 			}
 			
-			newFile = new File(folderPath, newfileName+".properties"); 
-			System.out.println(" 새로운 메시지 파일 작성 시작" + newFile.getPath());
+			newFile = new File(folderPath, newfileName+".properties");
 			fileCopy(temp_file, newFile); 
-			temp_file.delete(); 
-			fis = new FileInputStream(newFile);
-			isr = new InputStreamReader(fis,"UTF-8"); 
-			br = new BufferedReader(isr); 
-			bw = new BufferedWriter(new FileWriter(newFile, true)); 
+			System.out.println("새로 파일이 생성되었습니다.>>>>"+newFile.getName());
 			
-			//한줄한줄 찾아보자 
+			System.out.println("파일 수정을 시작합니다.>> ");
+			
+			FileInputStream fis = new FileInputStream(temp_file);
+			InputStreamReader isr = new InputStreamReader(fis,"UTF-8"); 
+			BufferedReader br = new BufferedReader(isr); 
+			FileWriter fw = new FileWriter(newFile); 
+			BufferedWriter bw = new BufferedWriter(fw); 
+			String temp = null; 
+			
 			while((temp=br.readLine())!=null){
+				System.out.println(temp);
 				temp = temp.trim();
 				if(temp.startsWith("#")){
 					//주석처리 
@@ -594,9 +576,14 @@ public class CheckMsgService {
 					String[] array= temp.split("=");
 					String code=array[0].trim();
 					String value=""; 
+					System.out.println(updateMsg.containsKey(code));
+
 					if(updateMsg.containsKey(code)){
-						value = unicodeConvert((String)updateMsg.get(code)); 
-						temp = code + "=" + value; 
+						System.out.println((String)updateMsg.get(code));
+						value = unicodeConvert((String)updateMsg.get(code));
+						System.out.println(value);
+						temp = code + "=" + value;
+						System.out.println(temp);
 						logger.info("\n [eidt]" + temp);
 						bw.write(temp);
 						bw.newLine();
@@ -609,11 +596,9 @@ public class CheckMsgService {
 					}
 				}
 				bw.flush();
+				fileBackup(temp_file); 
 			}
 			
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
 			try {
 				fis.close();
 			} catch (IOException e) {
@@ -627,6 +612,12 @@ public class CheckMsgService {
 			}
 
 			try {
+				fw.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			try {
 				br.close();
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -636,24 +627,41 @@ public class CheckMsgService {
 			}catch (IOException e) {
 				e.printStackTrace();
 			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+		
 		logger.info(newFile.getName() + "파일을 생성 하였습니다. ");
 		String infoText = newFile.getName()+"을 생성하였습니다."; 
 		return infoText;
 	}
 
-	public static boolean fileCopy(File file, File temp_file){
+	public boolean fileCopy(File file, File temp_file){
+		System.out.println(file.getName()+">>>>"+ temp_file.getName()+"복사시작 ");
+		InputStream is = null; 
+		OutputStream os = null; 
 		try{
-			FileInputStream fis = new FileInputStream(file); 
-			FileOutputStream fos = new FileOutputStream(temp_file);  
-
-			int data = 0;
-			while((data=fis.read())!=-1) {
-				fos.write(data);
+			is = new FileInputStream(file); 
+			os = new FileOutputStream(temp_file);  
+			byte[] buffer = new byte[1024];
+	        int length;
+	        
+	        while ((length = is.read(buffer)) > 0) {
+	            os.write(buffer, 0, length);
+	        }
+	        
+			try {
+				is.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-			fis.close();
-			fos.close();
-			
+			try {
+				os.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			System.out.println(file.getName()+">>>>"+ temp_file.getName()+"복사끝");
 			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -662,6 +670,39 @@ public class CheckMsgService {
 			e.printStackTrace();
 			return false;
 		}
+	}
+	
+	public boolean fileBackup(File file){
+		String folderPath = file.getParent();  
+		try{
+			File dir = new File(folderPath+"/bak");
+			if(file.exists()){
+				System.out.println("새로 생성할 파일명이 이미 있음.");
+				//bakupfolder가 있는지 확인 
+				if(!dir.exists() || !dir.isDirectory()) { 
+					dir.mkdirs(); 
+			    } 
+				int p = (file.getName()).lastIndexOf("."); 
+				String backupFileName =  file.getName().substring(0,p); 
+				 
+				File backupFile;
+				
+				do{
+					backupFileName = "bak_" +backupFileName; 
+					backupFile = new File(dir, backupFileName+".properties"); 
+
+				}while(backupFile.exists()); 
+				
+				System.out.print(">>>> 백업된 파일 경로  :  "+ backupFile.getPath());
+				boolean isMoved = file.renameTo(backupFile); 
+				System.out.println(" ////// 백업파일 이동 성공 : " + isMoved);
+				System.out.println("!!!!!!" +  file.getName()+ "을" + backupFile.getName()+" 파일로 백업함."); 
+			}
+			return true;
+		}catch (Exception e) {
+			return false; 
+		}
+		
 	}
 
 	public Map<String, Object> jsonToMap(JSONObject json) throws JSONException {

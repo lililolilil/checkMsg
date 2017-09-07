@@ -423,8 +423,14 @@ var createMessageData = function() {
 	var $tr = $("tr[filenm='"+fileName+"'"); 
 	$tr.each(function(e){
 	    var code = $(this).data("code").replace(/\_/gi,"."), 
+	    	value = ""; 
+	    if($(this).hasClass("edited")){
+	    	value = $(this).find(".valueString").val();  
+	    }else{
 	    	value = $(this).find(".valueString").text();  
+	    }
 	    messageMap[code]= value; 
+
 	}); 
 	fileMap[fileName] = messageMap; 
 	fileList.push(fileName); 

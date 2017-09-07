@@ -241,7 +241,7 @@ public class CheckMsgController {
 				if(fileName.equals(standardFile)){
 					info = checkMsgService.createfile((HashMap<String,Object>)codeAndVal, deletelist, folderPath, fileName); 
 				}else{
-					info = checkMsgService.createfile((HashMap<String,Object>)codeAndVal.get(fileName), deletelist, folderPath, standardFile, fileName); 
+					info = checkMsgService.createfile((HashMap<String,Object>)codeAndVal, deletelist, folderPath, standardFile, fileName); 
 				}; 
 				
 				resultMap.put("info"+i, info); 
