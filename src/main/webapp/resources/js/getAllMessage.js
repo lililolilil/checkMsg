@@ -27,7 +27,32 @@ var addEvent = function() {
     });
 
     $(".btn-createMsgfile").on("click",function(e){
-	createMessagefile(); 
+	var stdFileNm = $(".msgfile_std:checked").data("filename");
+	    var $dangerCode= $(".danger[filenm='"+stdFileNm+"'"); 
+	    
+	    if($dangerCode.length>0){
+		var table = '<table class="table table-striped"><thead><colgroup><col width="30%"><col width="60%"></colgruop><tr><th>파일명</th><th>코드</th></tr></thead><tbody>'
+		$dangerCode.each(function(e){
+			var code = $(this).data("code"); 
+			var fileName = $(this).attr("filenm"); 
+			table+='<tr><td>'+fileName+'</td><td>'+code+'</td></tr>'; 
+		    }); 
+		table+='</tbody><table>'
+		  var confirmbody = '<div class="alert alert-danger"><p class="text-danger">'+"<strong>주의!!</strong>선택하신 파일에 없는 메시지 코드가 있습니다. " + "</p>"; 
+		    	confirmbody += "<p> 해당파일 기준으로 메시지 파일을 생성했을 경우 없는 메시지 코드는 삭제 됩니다."+"</p></div>"; 
+		    	confirmbody += table;
+		    	confirmbody += '<p>'+ "파일 생성을 진행하시겠습니까?"+"</p>"; 
+		    	
+		    util.getConfirm("파일 생성 경고!", confirmbody, function(result){
+			    if(!result){
+				return null; 
+			    }else{
+				createMessagefile(); 
+			    }
+		    })
+	    }else{
+		createMessagefile(); 
+	    }
     }); 
 
     $('#radioBtn a').on('click', function(){
@@ -308,12 +333,13 @@ var displayResult = function(data) {
 	    thead.clone().html(tr.clone().html(td.clone().text("code")).append(td.clone().html("value").attr("colspan", "2"))));
     newTable.prepend(colgruop);
     var newBody = tbody.clone().html("");
-
+    var dangerCode = []; 
     $.each(data, function(key, value) {
 	var code = td.clone().text(key).attr("rowspan", files.length).addClass("bossNode").append(btn.clone());
 	var first =  Object.keys(value)[0];
 	$.each(value, function(fileNm, valueStr){
-	    var newTr = tr.clone().html("").attr({"fileNm" : fileNm, "valueStr" : valueStr, "data-code": key.replace(/\./gi,"_")});  
+	    var code_val = key.replace(/\./gi,"_"); 
+	    var newTr = tr.clone().html("").attr({"fileNm" : fileNm, "valueStr" : valueStr, "data-code": code_val});  
 	    if(fileNm === first){
 		newTr.append(code)
 	    }
@@ -322,6 +348,7 @@ var displayResult = function(data) {
 		newTr.append(td.clone().html(span.clone().text(fileNm).addClass("fileNm")))
 		.append(td.clone().html(span.clone().text("").addClass("valueString editable"))); 
 		newTr.addClass("danger"); 
+		dangerCode.push(code_val); 
 	    }else{
 		newTr.append(td.clone().html(span.clone().text(fileNm).addClass("fileNm")))
 		.append(td.clone().html(span.clone().text(valueStr).addClass("valueString editable")));
@@ -329,8 +356,12 @@ var displayResult = function(data) {
 	    newBody.append(newTr);
 	});
     });//each 
-
+    
     $("#result").append(newTable.append(newBody));
+    
+    $.each(dangerCode, function(index, data){
+	$("tr[data-code='"+data+"']").prependTo(newTable); 
+    })
     $(".s_formContainer").hide();
 }
 
@@ -353,7 +384,13 @@ var editMessagefile = function() {
 		alert(data.result);
 		//TODO  " 메시지를 다시 불러오시겠습니까 ? "
 	    } else {
-		alert(data.err);
+		var alertTxt = null; 
+		$.each(data,function(key,value){
+		    alertTxt+= value + '<br>'; 
+		})
+		if(alertTxt!=null){
+			alert(alertTxt);
+		}
 	    }
 	}
     });
@@ -386,7 +423,7 @@ var createEditData = function() {
 }
 
 var createMessagefile = function(){
-    alert("createFile");
+    alert("메시지 파일 생성을 시작합니다."); 
     util.progressBar("start");
     var param = createMessageData();
     var url = contextPath + "/checkMsg/createMsgfile" ;
@@ -404,7 +441,13 @@ var createMessagefile = function(){
 		alert(data.result);
 		//TODO  " 메시지를 다시 불러오시겠습니까 ? "
 	    } else {
-		alert(data.err);
+		var alertTxt = null; 
+		$.each(data,function(key,value){
+		    alertTxt+= value + '<br>'; 
+		})
+		if(alertTxt!=null){
+			alert(alertTxt);
+		}
 	    }
 	}
     });

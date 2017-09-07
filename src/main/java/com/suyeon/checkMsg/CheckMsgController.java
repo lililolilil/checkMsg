@@ -110,7 +110,6 @@ public class CheckMsgController {
 					valueMap = (HashMap<String, String>) message.get(code); 
 					valueMap.replace(fileName, messageMap.get(code)); 
 					message.put(code, valueMap); 
-					checkMsgService.printMap(code, (Map) message.get(code));  
 				}
 				
 			}

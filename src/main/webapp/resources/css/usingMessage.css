@@ -5,9 +5,9 @@
 }
 .u_formContainer{
     display: inline-block;
+    width:100%;
 }
 .clearBtn{
-	float:left
 }
 .submitBtn {
 	float: right;
@@ -45,4 +45,8 @@ div[id$="_container"] {
     font-size: 0.8em;
     background-color: #FFA01E;
     border-radius: 50%;
+}
+
+.checkboxContainer {
+	margin-top: 2em; 
 }

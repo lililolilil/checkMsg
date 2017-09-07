@@ -576,14 +576,13 @@ public class CheckMsgService {
 					String[] array= temp.split("=");
 					String code=array[0].trim();
 					String value=""; 
-					System.out.println(updateMsg.containsKey(code));
-
-					if(updateMsg.containsKey(code)){
-						System.out.println((String)updateMsg.get(code));
+					if(code.equals("mobile.helper.default.msg")){
+						logger.info(code+"예외 코드.. html코드라..");
+						bw.write(temp);
+						bw.newLine();
+					}else if(updateMsg.containsKey(code)){
 						value = unicodeConvert((String)updateMsg.get(code));
-						System.out.println(value);
 						temp = code + "=" + value;
-						System.out.println(temp);
 						logger.info("\n [eidt]" + temp);
 						bw.write(temp);
 						bw.newLine();
@@ -596,7 +595,6 @@ public class CheckMsgService {
 					}
 				}
 				bw.flush();
-				fileBackup(temp_file); 
 			}
 			
 			try {
@@ -631,7 +629,7 @@ public class CheckMsgService {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+		temp_file.delete(); 
 		logger.info(newFile.getName() + "파일을 생성 하였습니다. ");
 		String infoText = newFile.getName()+"을 생성하였습니다."; 
 		return infoText;
