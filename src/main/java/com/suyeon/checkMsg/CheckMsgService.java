@@ -274,28 +274,33 @@ public class CheckMsgService {
 		return getFilePathtoMap(filepath,"");
 	}
 	public Map<String, String> getFilePathtoMap(String filepath, String fileExtension) throws FileNotFoundException {
-	/*	File dir = new File(filepath); 
-		if(!dir.exists() || !dir.isDirectory()) { 
-	         new 
-	    } 
-		*/
+		return getFilePathtoMap(filepath,fileExtension,true);
+	}
+	public Map<String, String> getFilePathtoMap(String filepath, String fileExtension, boolean findChild) throws FileNotFoundException {
+		logger.info("getFilePathToMap>>>>>"+findChild);
 		Map<String,String> filePathMap = new HashMap<>();
-		System.out.println(filepath+"/"+fileExtension);
-		if(new File(filepath).exists()){
-			filePathMap = FilesListinFoldertoMap(new File(filepath), filePathMap, fileExtension); //jsp 파일탐색
-			System.out.println("[결과]"+filePathMap.size()+"개의 파일이 검색되었습니다. ");
-			System.out.println("　└─검색된 파일의 경로를 반환합니다.");
-			return filePathMap;
-		}else{
-			throw new FileNotFoundException(); 
-		}
-		
+			System.out.println(filepath+"/"+fileExtension);
+			if(new File(filepath).exists()){
+				filePathMap = FilesListinFoldertoMap(new File(filepath), filePathMap, fileExtension, findChild); //jsp 파일탐색
+				System.out.println("[결과]"+filePathMap.size()+"개의 파일이 검색되었습니다. ");
+				System.out.println("　└─검색된 파일의 경로를 반환합니다.");
+				return filePathMap;
+			}else{
+				throw new FileNotFoundException(); 
+			}
 	}
 	private Map<String,String> FilesListinFoldertoMap(final File folder, Map<String,String> filePathMap, String fileExtension){		
+		return FilesListinFoldertoMap(folder,filePathMap,fileExtension,true); 
+	}//end listFilesForFolder 
+	private Map<String,String> FilesListinFoldertoMap(final File folder, Map<String,String> filePathMap, String fileExtension, boolean findChild){		
+		logger.info("filelistinfolderToMap>>>>>>>>>"+findChild);
 		for(final File fileEntry : folder.listFiles()){
 			if(fileEntry.isDirectory()){
 				//System.out.println("----------------dir"+fileEntry.getName());
-				FilesListinFoldertoMap(fileEntry, filePathMap, fileExtension);
+				if(findChild){
+					FilesListinFoldertoMap(fileEntry, filePathMap, fileExtension);
+				}
+				
 			}else{
 				if(fileEntry.isFile()&&fileEntry.getName().contains(fileExtension)){
 					//System.out.println(fileEntry.getName()+"/    "+fileEntry.getPath());
@@ -305,7 +310,8 @@ public class CheckMsgService {
 			//end for
 		}
 		return (Map<String, String>) filePathMap;
-	}//end listFilesForFolder 
+	}
+
 	/**
 	 * messagefilepath를 파라미터로 받아서 파일을 로드해서 한줄씩 읽으면서 code와 value를 hashmap에 저장해서 리턴함.
 	 * code에 중복이 있거나 value에 빈값이 있으면 알려줌. 
@@ -563,7 +569,6 @@ public class CheckMsgService {
 			String temp = null; 
 			
 			while((temp=br.readLine())!=null){
-				System.out.println(temp);
 				temp = temp.trim();
 				if(temp.startsWith("#")){
 					//주석처리 
@@ -583,7 +588,7 @@ public class CheckMsgService {
 					}else if(updateMsg.containsKey(code)){
 						value = unicodeConvert((String)updateMsg.get(code));
 						temp = code + "=" + value;
-						logger.info("\n [eidt]" + temp);
+						//logger.info("\n [eidt]" + temp);
 						bw.write(temp);
 						bw.newLine();
 					}else if(deletelist.contains(code)){

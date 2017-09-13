@@ -63,7 +63,7 @@
 	</div>
 	<div class="row">
 		<div class="after-btnArea" style="display: none;">
-			<div class="input-group">
+			<div class="input-group" style="width:100%;">
 				<div id="radioBtn" class="btn-group">
 					<a class="btn btn-primary btn-sm active" data-toggle="tooltip"
 						data-name="opType" data-target="#edit_condition" data-title="edit">파일수정</a>
@@ -72,8 +72,8 @@
 						data-title="create">파일생성</a>
 				</div>
 				<input type="hidden" name="opType" id="opType">
+				<button class="btn btn-success reloadData pull-right">새로고침</button>
 			</div>
-
 			<div class="option_container">
 				<div id="edit_condition" class="targetContainer">
 					<div class="alert alert-info col-sm-12 clearfix">
@@ -106,26 +106,26 @@
 							메시지 키값이 존재하여야만 해당 키값으로 메시지 리소스를 추가 할 수있습니다.
 						</div>
 					</div>
-					
+
 					<div class="col-sm-6">
 						<p class="notice col-sm-12">기준이 될 파일을 선택해 주세요.</p>
 						<div class="fileBeStandard well col-sm-12"></div>
 					</div>
-					
+
 					<div class="col-sm-6">
-						<p class="notice col-sm-12"> 생성할 파일입니다.</p>
-						<div id="newfileName_container" class="fileWillCreate well col-sm-12">
-						</div>
+						<p class="notice col-sm-12">생성할 파일입니다.</p>
+						<div id="newfileName_container"
+							class="fileWillCreate well col-sm-12"></div>
 					</div>
 					<div class="col-sm-12">
-							<div class="msgFileDir col-sm-6" style="word-wrap: break-word;">
-								
-							</div>
-							<div class="col-sm-4">
+						<div class="msgFileDir col-sm-6" style="word-wrap: break-word;">
+
+						</div>
+						<div class="col-sm-4">
 							<input type="text" class="form-control " id="input_newfileName"
 								placeholder="파일명을 입력해주세요">
-							</div>
-							<button type="button" data-item-name="newfileName"
+						</div>
+						<button type="button" data-item-name="newfileName"
 							class="btn btn-default pull-right col-sm-2 addBtn">파일 추가</button>
 					</div>
 					<div class="form-group col-sm-12 clearfix">
@@ -134,11 +134,10 @@
 							파일을 기준으로 메시지파일 생성</button>
 					</div>
 				</div>
-				
-			</div>
 
+			</div>
 		</div>
-		
+
 	</div>
 	<div id="result" class="table-responsive syncMessage"></div>
 </div>

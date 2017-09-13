@@ -54,7 +54,7 @@ public class CheckMsgController {
 			//String baseDir = jsonObj.getString("baseDir"); 
 			String messagefileDir = jsonObj.getString("messagefileDir"); 
 			logger.info(messagefileDir);	
-			fileMap = checkMsgService.getFilePathtoMap(messagefileDir,".properties"); 
+			fileMap = checkMsgService.getFilePathtoMap(messagefileDir,".properties",false); 
 		}catch (FileNotFoundException e){
 			resultMap.put("err", " 파일경로를 다시 확인해 주세요."); 
 		}catch (Exception e) {

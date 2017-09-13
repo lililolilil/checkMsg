@@ -13,46 +13,62 @@ var init = function() {
 var addEvent = function() {
     // 가져올 메시지 파일 선택 하기 
     $(".choosefile").on("click", function(e) {
+	util.progressBar("start");
 	getMessageFile();
+	util.progressBar("stop");
+
     });
     // 전체 메시지 가져오기 
     $("#sync_form").on("submit", function(e) {
 	e.preventDefault();
-	getMessage();
+	util.progressBar("start");
+	getMessage(); 
+	util.progressBar("stop");
     });
-
+    $(".reloadData").on("click", function(e){
+	util.progressBar("start");
+	getMessage(); 
+	util.progressBar("stop");
+    })
     // 메시지 파일 저장 버튼 클릭 
     $(".btn-editMsgfile").on("click", function(e) {
+	util.progressBar("start");
 	editMessagefile();
+	util.progressBar("stop");
     });
 
     $(".btn-createMsgfile").on("click",function(e){
 	var stdFileNm = $(".msgfile_std:checked").data("filename");
-	    var $dangerCode= $(".danger[filenm='"+stdFileNm+"'"); 
-	    
-	    if($dangerCode.length>0){
-		var table = '<table class="table table-striped"><thead><colgroup><col width="30%"><col width="60%"></colgruop><tr><th>파일명</th><th>코드</th></tr></thead><tbody>'
+	var $dangerCode= $(".danger[filenm='"+stdFileNm+"'"); 
+
+	if($dangerCode.length>0){
+	    var table = '<table class="table table-striped"><thead><colgroup><col width="30%"><col width="60%"></colgruop><tr><th>파일명</th><th>코드</th></tr></thead><tbody>'
 		$dangerCode.each(function(e){
-			var code = $(this).data("code"); 
-			var fileName = $(this).attr("filenm"); 
-			table+='<tr><td>'+fileName+'</td><td>'+code+'</td></tr>'; 
-		    }); 
-		table+='</tbody><table>'
-		  var confirmbody = '<div class="alert alert-danger"><p class="text-danger">'+"<strong>주의!!</strong>선택하신 파일에 없는 메시지 코드가 있습니다. " + "</p>"; 
-		    	confirmbody += "<p> 해당파일 기준으로 메시지 파일을 생성했을 경우 없는 메시지 코드는 삭제 됩니다."+"</p></div>"; 
-		    	confirmbody += table;
-		    	confirmbody += '<p>'+ "파일 생성을 진행하시겠습니까?"+"</p>"; 
-		    	
-		    util.getConfirm("파일 생성 경고!", confirmbody, function(result){
-			    if(!result){
-				return null; 
-			    }else{
-				createMessagefile(); 
-			    }
-		    })
-	    }else{
-		createMessagefile(); 
-	    }
+		    var code = $(this).data("code"); 
+		    var fileName = $(this).attr("filenm"); 
+		    table+='<tr><td>'+fileName+'</td><td>'+code+'</td></tr>'; 
+		}); 
+	    table+='</tbody><table>'
+		var confirmbody = '<div class="alert alert-danger"><p class="text-danger">'+"<strong>주의!!</strong>선택하신 파일에 없는 메시지 코드가 있습니다. " + "</p>"; 
+	    confirmbody += "<p> 해당파일 기준으로 메시지 파일을 생성했을 경우 없는 메시지 코드는 삭제 됩니다."+"</p></div>"; 
+	    confirmbody += table;
+	    confirmbody += '<p>'+ "파일 생성을 진행하시겠습니까?"+"</p>"; 
+
+	    util.getConfirm("파일 생성 경고!", confirmbody, function(result){
+		if(!result){
+		    return null; 
+		}else{
+		    util.progressBar("start");
+		    createMessagefile(); 
+		    util.progressBar("stop");
+		}
+	    })
+	}else{
+	    util.progressBar("start");
+	    createMessagefile(); 
+	    util.progressBar("stop");
+	}
+
     }); 
 
     $('#radioBtn a').on('click', function(){
@@ -134,7 +150,6 @@ var deleteTr = function(fileNm){
     $fileTr.each(function(e){
 	$this = $(this); 
 	if($this.find("td.bossNode").size()>0){
-	    debugger;
 	    var $cloned_boss = $this.find("td.bossNode").clone();  
 	    $this.next("tr").prepend($cloned_boss); 
 	}
@@ -194,8 +209,8 @@ var addEvent_after = function() {
 
     // 삭제 버튼 클릭 
     $(".deleteMsg").on("click", function(e) {
-	var codeVal = $(this).parents("tr").attr("codevalue");
-	var $codetr = $("tr[codevalue='" + codeVal + "']");
+	var codeVal = $(this).parents("tr").data("code");
+	var $codetr = $("tr[data-code='" + codeVal + "']");
 	if ($codetr.hasClass("edited")) {
 	    alert("수정중인 메시지는 삭제할 수 없습니다. 수정 취소 후 삭제 해주세요. ");
 	} else if ($codetr.hasClass("deleted")) {// 삭제 취소 버튼이니까 삭제를 취소 해줘야 함. 
@@ -209,7 +224,6 @@ var addEvent_after = function() {
 
 }
 var getMessageFile = function() {
-    util.progressBar("start");
     var val_messageDir = $("#messagefileDir").val().replace(/\\/gi, "/"); 
     $.cookie("messagefileDir", val_messageDir);
     $(".msgFileDir").text(val_messageDir); 
@@ -225,7 +239,6 @@ var getMessageFile = function() {
 	data : JSON.stringify(form_data),
 	error : function(xhr, status, error) {
 	    alert(error);
-	    util.progressBar("stop");
 	},
 	success : function(data) {
 	    if (data.err != null || data.err !== "" || data.err != undefined) {
@@ -236,12 +249,14 @@ var getMessageFile = function() {
 	}
 
     });
-    util.progressBar("stop");
 }
 var displayRadio = function(files){
-    var radioArea = $(".fileBeStandard").html("");
-    var radio = $("<input type='radio'>"), label = $("<label></label>");
-    var div = $("<div></div>").addClass("clearfix");
+    var radioArea = $(".fileBeStandard").html(""),
+    	radio = $("<input type='radio'>"), 
+    	label = $("<label></label>"),
+    	div = $("<div></div>").addClass("clearfix"), 
+    	$newFileNmContainer = $("#newfileName_container").html("");
+    
     $.each(files, function(index, value) {
 	var fileName = value; 
 	//파일 생성 시 기준 파일을 정하기 위한 라디오 버튼 
@@ -252,7 +267,6 @@ var displayRadio = function(files){
 	    "data-fileName" : fileName
 	}));
 	// 파일 생성 시 파일을 생성하기 위한 파일 명컨테이너에도 넣어줌.
-	var $newFileNmContainer = $("#newfileName_container"),
 	itemBox =  $("<div class='itemBox' itemvalue='"+fileName+"'><button type='button' class='btn deleteBox pull-right initfile' data-role='button'>x</button></div>"),
 	span = $("<span></span>").addClass("newfileName").text(fileName); 
 	itemBox.prepend(span);  
@@ -281,7 +295,6 @@ var displayCheckbox = function(data) {
 
 
 var getMessage = function() {
-    util.progressBar("start");
     var url = contextPath+ "/checkMsg/getAllMessage";
     var msgfileInfoList = [];
     var $messagefile = $(".msgfile_cb:checked");
@@ -307,7 +320,6 @@ var getMessage = function() {
 	data : JSON.stringify(form_data),
 	error : function(xhr, status, error) {
 	    alert(error);
-	    util.progressBar("stop");
 	},
 	success : function(data) {
 	    if (data.err != null || data.err !== "" || data.err != undefined) {
@@ -320,7 +332,6 @@ var getMessage = function() {
 	}
 
     });
-    util.progressBar("stop");
 }
 var displayResult = function(data) {
     $("#result").html("");
@@ -356,9 +367,9 @@ var displayResult = function(data) {
 	    newBody.append(newTr);
 	});
     });//each 
-    
+
     $("#result").append(newTable.append(newBody));
-    
+
     $.each(dangerCode, function(index, data){
 	$("tr[data-code='"+data+"']").prependTo(newTable); 
     })
@@ -367,7 +378,6 @@ var displayResult = function(data) {
 
 var editMessagefile = function() {
     alert("edit");
-    util.progressBar("start");
     var param = createEditData();
     var url = contextPath + "/checkMsg/editMsgfile";
     var request = $.ajax({
@@ -389,19 +399,17 @@ var editMessagefile = function() {
 		    alertTxt+= value + '<br>'; 
 		})
 		if(alertTxt!=null){
-			alert(alertTxt);
+		    alert(alertTxt);
 		}
 	    }
 	}
     });
-
-    util.progressBar("stop");
 }
 var createEditData = function() {
     var deleteMessages = []; // code만 들어감. 
 
     $(".deleted").each(function(e) {
-	deleteMessages.push($(this).data("code"));
+	deleteMessages.push($(this).data("code").replace(/\_/gi,"."));
     });
     var updateMessages = [];
     var param = {}; 
@@ -424,7 +432,6 @@ var createEditData = function() {
 
 var createMessagefile = function(){
     alert("메시지 파일 생성을 시작합니다."); 
-    util.progressBar("start");
     var param = createMessageData();
     var url = contextPath + "/checkMsg/createMsgfile" ;
     var request = $.ajax({
@@ -437,25 +444,27 @@ var createMessagefile = function(){
 	    alert(error);
 	},
 	success : function(data) {
-	    if (data.err != null || data.err !== "" || data.err != undefined) {
-		alert(data.result);
-		//TODO  " 메시지를 다시 불러오시겠습니까 ? "
+	    if (data.err != null || data.err != undefined) {
+		alert(data.err);
 	    } else {
-		var alertTxt = null; 
+		var text = ""; 
 		$.each(data,function(key,value){
-		    alertTxt+= value + '<br>'; 
+		    text+= value + '\n'; 
 		})
-		if(alertTxt!=null){
-			alert(alertTxt);
+		if(text!=null){
+		    alert(text);
 		}
 	    }
 	}
     });
-
-    util.progressBar("stop");
 }
 var createMessageData = function() {
     var deleteMessages = []; // code만 들어감. 
+
+    $(".deleted").each(function(e) {
+	deleteMessages.push($(this).data("code").replace(/\_/gi,"."));
+    });
+
     var fileMap = {}; 
     var fileList = []; 
     var param = {}; 
@@ -466,21 +475,23 @@ var createMessageData = function() {
 	var $tr = $("tr[filenm='"+fileName+"'"); 
 	$tr.each(function(e){
 	    var code = $(this).data("code").replace(/\_/gi,"."), 
-	    	value = ""; 
+	    value = ""; 
 	    if($(this).hasClass("edited")){
-	    	value = $(this).find(".valueString").val();  
+		value = $(this).find(".valueString").val();  
 	    }else{
-	    	value = $(this).find(".valueString").text();  
+		value = $(this).find(".valueString").text();  
 	    }
-	    messageMap[code]= value; 
-
+	    /*if(value.length!=0){
+		messageMap[code]= value; 
+	    }*/
+	    messageMap[code]=value; 
 	}); 
 	fileMap[fileName] = messageMap; 
 	fileList.push(fileName); 
     }); 
-    
+
     var stdFileNm = $(".msgfile_std:checked").data("filename");
-    
+
     param.folderPath = $("#messagefileDir").val();
     param.fileList = fileList;
     param.standardFile = stdFileNm; 
