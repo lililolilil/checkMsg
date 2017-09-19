@@ -103,7 +103,7 @@ public class CheckMsgController {
 					String code = itr.next(); 
 					if(!message.keySet().contains(code)){
 						for(int j = 0; j<fileNames.size(); j++){
-							valueMap.put(fileNames.get(j), ""); 
+							valueMap.put(fileNames.get(j), "NoCode"); 
 						}
 						message.put(code, valueMap); 
 					}

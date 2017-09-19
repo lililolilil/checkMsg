@@ -224,12 +224,17 @@ var addEvent_after = function() {
 
 }
 var getMessageFile = function() {
-    var val_messageDir = $("#messagefileDir").val().replace(/\\/gi, "/"); 
+    $input_Dir = $("#messagefileDir"); 
+    if(!util.validateData($input_Dir)){
+	return false; 
+    } 
+    
+    var val_messageDir = $input_Dir.val(); 
     $.cookie("messagefileDir", val_messageDir);
     $(".msgFileDir").text(val_messageDir); 
     var url = contextPath + "/checkMsg/getFilelist";
     var form_data = {
-	    messagefileDir :val_messageDir
+	    messagefileDir:val_messageDir
     }
     $.ajax({
 	method : "POST",
@@ -345,6 +350,7 @@ var displayResult = function(data) {
     newTable.prepend(colgruop);
     var newBody = tbody.clone().html("");
     var dangerCode = []; 
+    var warning = []; 
     $.each(data, function(key, value) {
 	var code = td.clone().text(key).attr("rowspan", files.length).addClass("bossNode").append(btn.clone());
 	var first =  Object.keys(value)[0];
@@ -354,8 +360,12 @@ var displayResult = function(data) {
 	    if(fileNm === first){
 		newTr.append(code)
 	    }
-
 	    if(valueStr.length == 0){
+		newTr.append(td.clone().html(span.clone().text(fileNm).addClass("fileNm")))
+		.append(td.clone().html(span.clone().text("").addClass("valueString editable"))); 
+		newTr.addClass("warning"); 
+		warning.push(code_val); 
+	    }else if(valueStr === "NoCode"){
 		newTr.append(td.clone().html(span.clone().text(fileNm).addClass("fileNm")))
 		.append(td.clone().html(span.clone().text("").addClass("valueString editable"))); 
 		newTr.addClass("danger"); 
@@ -369,10 +379,12 @@ var displayResult = function(data) {
     });//each 
 
     $("#result").append(newTable.append(newBody));
-
+    $.each(warning, function(index,data){
+	$("tr[data-code='"+data+"']").prependTo(newTable); 
+    });
     $.each(dangerCode, function(index, data){
 	$("tr[data-code='"+data+"']").prependTo(newTable); 
-    })
+    });
     $(".s_formContainer").hide();
 }
 

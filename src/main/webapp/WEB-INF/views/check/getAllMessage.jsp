@@ -34,7 +34,7 @@
 				</div>
 				<div class="col-sm-9">
 					<input type="text" class="form-control " id="messagefileDir"
-						name="messagefileDir"
+						name="messagefileDir" data-valid=".+"
 						placeholder="메시지리소스 디렉터리를 입력해 주세요. ex)/WebContent/WEB-INF/messages"
 						required="required">
 				</div>
