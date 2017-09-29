@@ -46,7 +46,7 @@ public class CheckMsgController {
 		logger.info("getFilelist");
 
 		HashMap<String, Object> resultMap = new HashMap<>();
-		Map<String, String> fileMap = new HashMap<>();
+		ArrayList<Object> fileList = new ArrayList<>(); 
 
 		try {
 
@@ -54,14 +54,14 @@ public class CheckMsgController {
 			// String baseDir = jsonObj.getString("baseDir");
 			String messagefileDir = jsonObj.getString("messagefileDir");
 			logger.info(messagefileDir);
-			fileMap = checkMsgService.getFilePathtoMap(messagefileDir, ".properties", false);
+			fileList = checkMsgService.getFilePathtoMap(messagefileDir, ".properties", false);
 		} catch (FileNotFoundException e) {
 			resultMap.put("err", " 파일경로를 다시 확인해 주세요.");
 		} catch (Exception e) {
 			e.printStackTrace();
 			resultMap.put("err", "시스템 에 문제가 생겼습니다. 확인 후 다시 시도해 주세요.");
 		}
-		resultMap.put("messagefile", fileMap);
+		resultMap.put("messagefile", fileList);
 		// 체크 해야 하는 메시지
 		return resultMap;
 	}

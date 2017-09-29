@@ -236,7 +236,7 @@ var getMessageFile = function() {
     var form_data = {
 	    messagefileDir:val_messageDir
     }
-    $.ajax({
+    $.ajax({ 
 	method : "POST",
 	url : url,
 	contentType : "application/json",
@@ -284,13 +284,13 @@ var displayCheckbox = function(data) {
     var checkbox = $("<input type='checkbox'>"), label = $("<label></label>");
     var div = $("<div></div>").addClass("clearfix");
     messagefile = data.messagefile;
-    $.each(messagefile, function(key, value) {
-	var fileName = key.split(".")[0]; 
-	var messageitem = div.clone().addClass("checkbox checkbox-primary").html(label.clone().attr("for", fileName).text(key)).prepend(checkbox.clone().attr({
+    $.each(messagefile, function(index, value) {
+	var fileName = value.fileName.split(".")[0]; 
+	var messageitem = div.clone().addClass("checkbox checkbox-primary").html(label.clone().attr("for", fileName).text(value.fileName)).prepend(checkbox.clone().attr({
 	    "id" : fileName,
 	    "class" : "msgfile_cb styled",
 	    "name" : fileName, 
-	    "value" : value
+	    "value" : value.filePath
 	}));
 	checkboxArea.append(messageitem).show();
     });

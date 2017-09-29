@@ -30,6 +30,7 @@
 
 div[id$="_container"] {
 	padding-bottom: 0.2em;
+	clear:both; 
 }
 
 .btn.deleteBox {

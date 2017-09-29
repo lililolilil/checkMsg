@@ -246,7 +246,7 @@ public class CheckMsgService {
 
 		return getFilePath(filepath, "");
 	}
-	public ArrayList<String> getFilePath(String filepath,String fileExtension) {
+	public ArrayList<String> getFilePath(String filepath, String fileExtension) {
 		ArrayList<String> filePathList = new ArrayList<>(); 
 		System.out.println(filepath+"/"+filePathList.toString() +" /"+ fileExtension);
 		filePathList = FilesListinFolder(new File(filepath), filePathList, fileExtension); //jsp 파일탐색
@@ -270,46 +270,50 @@ public class CheckMsgService {
 		}
 		return filePathList;
 	}//end listFilesForFolder 
-	public Map<String, String> getFilePathtoMap(String filepath) throws FileNotFoundException {
+	public ArrayList<Object> getFilePathtoMap(String filepath) throws FileNotFoundException {
 		return getFilePathtoMap(filepath,"");
 	}
-	public Map<String, String> getFilePathtoMap(String filepath, String fileExtension) throws FileNotFoundException {
+	public ArrayList<Object> getFilePathtoMap(String filepath, String fileExtension) throws FileNotFoundException {
 		return getFilePathtoMap(filepath,fileExtension,true);
 	}
-	public Map<String, String> getFilePathtoMap(String filepath, String fileExtension, boolean findChild) throws FileNotFoundException {
+	public ArrayList<Object> getFilePathtoMap(String filepath, String fileExtension, boolean findChild) throws FileNotFoundException {
 		logger.info("getFilePathToMap>>>>>"+findChild);
-		Map<String,String> filePathMap = new HashMap<>();
+		ArrayList<Object> fileInfoList = new ArrayList<>(); 
 			System.out.println(filepath+"/"+fileExtension);
 			if(new File(filepath).exists()){
-				filePathMap = FilesListinFoldertoMap(new File(filepath), filePathMap, fileExtension, findChild); //jsp 파일탐색
-				System.out.println("[결과]"+filePathMap.size()+"개의 파일이 검색되었습니다. ");
+				fileInfoList = FilesListinFoldertoMap(new File(filepath), fileInfoList, fileExtension, findChild); //jsp 파일탐색
+				System.out.println("[결과]"+fileInfoList.size()+"개의 파일이 검색되었습니다. ");
 				System.out.println("　└─검색된 파일의 경로를 반환합니다.");
-				return filePathMap;
+				return fileInfoList;
 			}else{
 				throw new FileNotFoundException(); 
 			}
 	}
-	private Map<String,String> FilesListinFoldertoMap(final File folder, Map<String,String> filePathMap, String fileExtension){		
-		return FilesListinFoldertoMap(folder,filePathMap,fileExtension,true); 
+	
+	private ArrayList<Object> FilesListinFoldertoMap(final File folder, ArrayList<Object> fileInfoList, String fileExtension){		
+		return FilesListinFoldertoMap(folder,fileInfoList,fileExtension,true); 
 	}//end listFilesForFolder 
-	private Map<String,String> FilesListinFoldertoMap(final File folder, Map<String,String> filePathMap, String fileExtension, boolean findChild){		
+	private ArrayList<Object> FilesListinFoldertoMap(final File folder,  ArrayList<Object> fileInfoList, String fileExtension, boolean findChild){		
 		logger.info("filelistinfolderToMap>>>>>>>>>"+findChild);
 		for(final File fileEntry : folder.listFiles()){
 			if(fileEntry.isDirectory()){
 				//System.out.println("----------------dir"+fileEntry.getName());
 				if(findChild){
-					FilesListinFoldertoMap(fileEntry, filePathMap, fileExtension);
+					FilesListinFoldertoMap(fileEntry, fileInfoList, fileExtension);
 				}
 				
 			}else{
 				if(fileEntry.isFile()&&fileEntry.getName().contains(fileExtension)){
+					HashMap<String, String> filaNameAndPath = new HashMap<>(); 
 					//System.out.println(fileEntry.getName()+"/    "+fileEntry.getPath());
-					filePathMap.put(fileEntry.getName(), fileEntry.getPath()); 
+					filaNameAndPath.put("fileName", fileEntry.getName()); 
+					filaNameAndPath.put("filePath", fileEntry.getPath()); 
+					fileInfoList.add(filaNameAndPath); 
 				}
 			}
 			//end for
 		}
-		return (Map<String, String>) filePathMap;
+		return fileInfoList;
 	}
 
 	/**

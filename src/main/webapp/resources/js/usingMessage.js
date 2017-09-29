@@ -144,16 +144,16 @@ var displayRadio = function(data) {
 	var div = $("<div></div>").addClass("clearfix");
 	messagefile = data.messagefile;
 	var $modalBody = $("#chooseFileModal").find(".modal-body"); 
-	$.each(messagefile, function(key, value) {
-	    var fileName =  key.split(".")[0]; 
-	    var messageitem = div.clone().addClass("radio radio-primary").html(label.clone().attr("for", key.split(".")[0]).text(key)).prepend(radio.clone().attr({
+	$.each(messagefile, function(index, value) {
+	    var fileName =  value.fileName.split(".")[0]; 
+	    var messageitem = div.clone().addClass("radio radio-primary").html(label.clone().attr("for", fileName).text(value.fileName)).prepend(radio.clone().attr({
 		"id" : fileName,
 		"class" : "msgfile_r styled",
 		"name" : "standardMsg", 
-		"value" : value
+		"value" : value.filePath
 	    }));
 	    // 메시지를 삭제할 메시지 파일을 modal창에 표시 할 체크 박스 
-	    var fileItem =  div.clone().css("padding","0 3em").addClass("checkbox checkbox-primary").html(label.clone().attr("for", "edit_"+key.split(".")[0]).text(key)).prepend(checkbox.clone().attr({
+	    var fileItem =  div.clone().css("padding","0 3em").addClass("checkbox checkbox-primary").html(label.clone().attr("for", "edit_"+fileName).text(value.fileName)).prepend(checkbox.clone().attr({
 		"class" : "msgfile_cb styled",
 		"name" : "eidtfiles", 
 		"id"	: "edit_"+fileName, 

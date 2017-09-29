@@ -98,12 +98,13 @@ var displayCheckbox = function(data) {
     div = $("<div></div>").addClass("checkbox checkbox-primary clearfix");
     messagefile = data.messagefile;
 
-    $.each(messagefile, function(key, value) {
-	var messageitem = div.clone().html(label.clone().attr("for", key.split(".")[0]).text(key)).prepend(checkbox.clone().attr({
-	    "id" : key.split(".")[0],
+    $.each(messagefile, function(index, value) {
+	var fileName = value.fileName.split(".")[0]; 
+	var messageitem = div.clone().html(label.clone().attr("for", fileName).text(value.fileName)).prepend(checkbox.clone().attr({
+	    "id" : fileName,
 	    "class" : "msgfile_cb styled",
-	    "name" : key.split(".")[0],
-	    "value" : value
+	    "name" : fileName,
+	    "value" : value.filePath
 	}));
 	checkboxArea.append(messageitem).show();
     });	
